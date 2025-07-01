@@ -1,1 +1,46 @@
 # InkBurn
+
+**InkBurn** is an extension for the Inkscape vector graphics software, designed specifically for laser cutting and engraving. It converts SVG designs into G-code files (.gc) that can be used with LaserGRBL and other software supporting G-code.
+
+## Features
+
+- **Seamless Integration**: Designed to work seamlessly with Inkscape, a popular vector graphics editor.
+- **G-code Generation**: Converts SVG files into G-code, compatible with laser engravers and cutters.
+- **Customizable Settings**: Allows users to adjust power, speed, and other parameters for precise control over the laser.
+- **User-Friendly Interface**: Simple and intuitive interface to ensure ease of use.
+
+## Installation
+
+1. **Download** the InkBurn extension from the [Releases](https://github.com/lgiuliani/inkburn/releases) page.
+2. **Extract** the downloaded ZIP file.
+3. **Copy** the extracted files into your Inkscape extensions directory (usually located at `~/.config/inkscape/extensions` on Linux, `%APPDATA%\Inkscape\extensions` on Windows, or `~/Library/Application Support/org.inkscape.Inkscape/config/inkscape/extensions` on macOS).
+4. **Restart** Inkscape to see the new InkBurn extension under the Extensions menu.
+
+## Usage
+
+1. **Open** your SVG file in Inkscape.
+2. **Navigate** to Extensions > InkBurn.
+3. **Configure** the settings such as laser power, speed, and passes according to your project needs.
+4. **Generate** the G-code by clicking the "Generate" button.
+5. **Use** the generated G-code with LaserGRBL or any other compatible software.
+
+## Compatibility
+
+- **Inkscape Version**: 1.4 or later
+- **Supported Output**: G-code (.gc)
+
+## Contribution
+
+Contributions are welcome! If you find any bugs or have feature requests, please open an issue on our [GitHub repository](https://github.com/lgiuliani/inkburn/issues).
+
+## License
+
+InkBurn is licensed under the GPL V3 License. See the [LICENSE](https://github.com/lgiuliani/inkburn/LICENSE) file for more information.
+
+## Acknowledgments
+
+InkBurn is inspired by the popular Inkscape extension, Ink/Stitch, which enables embroidery design for embroidery machines.
+
+## Contact
+
+For any questions or support, please reach out to our [support team](mailto:l_giuliani@hotmail.com).
