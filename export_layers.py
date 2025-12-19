@@ -15,8 +15,8 @@
  # You should have received a copy of the GNU General Public License 
  # along with this program. If not, see <http://www.gnu.org/licenses/>.
  #
-import os
 import inkex
+from pathlib import Path
 from inkex.transforms import Transform
 from inkex import bezier
 from common import get_layer_name, is_visible, get_sorted_elements, list_layers
@@ -153,20 +153,13 @@ class ExportGCode(inkex.Effect):
             
         return gcode
 
-    def get_output_file(self) -> str:
-        """Return target filename with path"""
-        inpath = self.document_path() or ''
-        base = os.path.splitext(os.path.basename(inpath))[0]
-        return os.path.join(os.path.dirname(inpath), base + '.nc')
-
     def effect(self) -> None:
         gcode = HEADER_GCODE.copy()
         gcode += self.process_layers()
         gcode += FOOTER_GCODE
 
-        outpath = self.get_output_file()
-        with open(outpath, 'w') as f:
-            f.write("\n".join(gcode))
+        outpath = Path(self.document_path() or '').with_suffix('.nc')
+        outpath.write_text("\n".join(gcode), encoding='utf-8')
         if DEBUG:
             inkex.utils.debug(f"GCode written to: {outpath}")
 
