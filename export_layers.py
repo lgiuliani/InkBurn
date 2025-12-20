@@ -25,6 +25,7 @@ SMAX = 1000          # Maximum laser power
 TRAVEL_SPEED = 4000  # mm/min for travel moves
 CURVE_SAMPLE = 0.1   # mm per interpolation step for curves
 COORD_PRECISION = 2  # Decimal precision for coordinate output
+GCODE_SEPARATOR = ''  # Separator for G-code command parts
 # KERF_WIDTH = 0.1
 DEBUG = 0
 
@@ -67,7 +68,7 @@ class ExportGCode(inkex.Effect):
             coords.append(f'Y{y:.{COORD_PRECISION}f}')
             
         if coords:
-            parts.append(' '.join(coords))
+            parts.append(GCODE_SEPARATOR.join(coords))
         elif not parts:
             # Position didn't change and motion type same - nothing to output
             return []
@@ -76,7 +77,7 @@ class ExportGCode(inkex.Effect):
         self.state['last_x'] = x
         self.state['last_y'] = y
         
-        return [' '.join(parts)] if parts else []
+        return [GCODE_SEPARATOR.join(parts)] if parts else []
 
     def process_element_to_gcode(self, elements: list, viewbox_height: float) -> list:
         """Convert a single SVG element to optimized G-code commands"""
