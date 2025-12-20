@@ -69,12 +69,13 @@ def get_sorted_elements(layer: etree) -> list:
     return elements
 
 def get_element_subpaths(elem):
-    """Get subpaths for an element, with transforms applied"""
+    """Get subpaths for an element, with transforms applied. Filters out empty subpaths."""
     try:
         transform = Transform(elem.composed_transform())
         path = elem.path.transform(transform)
         superpath = path.to_superpath()
-        return superpath
+        # Filter out empty subpaths
+        return [subpath for subpath in superpath if subpath and len(subpath) >= 1]
     except Exception as e:
         inkex.utils.debug(f"Error processing element {elem.get('id', '')}: {str(e)}")
         return None

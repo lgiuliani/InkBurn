@@ -105,9 +105,6 @@ class ExportGCode(inkex.Effect):
             commands.append(comment[:80])
             
             for subpath in superpath:
-                if not subpath or len(subpath) < 1:
-                    continue
-                    
                 # Move to path start with travel move
                 x0, y0 = subpath[0][1]
                 if move_cmds := self.add_move(x0, viewbox_height - y0, 'G0'):
