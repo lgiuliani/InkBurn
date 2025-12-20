@@ -55,6 +55,10 @@ class ExportGCode(inkex.Effect):
         """Add move command with optimized output"""            
         parts = []
         
+        # Round coordinates before comparison and formatting to avoid duplicates
+        x_rounded = round(x, COORD_PRECISION)
+        y_rounded = round(y, COORD_PRECISION)
+        
         # Add motion type if changed
         if motion_type != self.state['last_motion']:
             parts.append(motion_type)
@@ -62,10 +66,10 @@ class ExportGCode(inkex.Effect):
             
         # Add coordinates that changed
         coords = []
-        if self.state['last_x'] != x:
-            coords.append(f'X{x:.{COORD_PRECISION}f}')
-        if self.state['last_y'] != y:
-            coords.append(f'Y{y:.{COORD_PRECISION}f}')
+        if self.state['last_x'] != x_rounded:
+            coords.append(f'X{x_rounded:.{COORD_PRECISION}f}'.rstrip('0').rstrip('.'))
+        if self.state['last_y'] != y_rounded:
+            coords.append(f'Y{y_rounded:.{COORD_PRECISION}f}'.rstrip('0').rstrip('.'))
             
         if coords:
             parts.append(GCODE_SEPARATOR.join(coords))
@@ -73,9 +77,9 @@ class ExportGCode(inkex.Effect):
             # Position didn't change and motion type same - nothing to output
             return []
             
-        # Update position state
-        self.state['last_x'] = x
-        self.state['last_y'] = y
+        # Update position state with rounded values
+        self.state['last_x'] = x_rounded
+        self.state['last_y'] = y_rounded
         
         return [GCODE_SEPARATOR.join(parts)] if parts else []
 
