@@ -46,14 +46,21 @@ class LayerDataDialog(inkex.EffectExtension):
     def __init__(self):
         super().__init__()
 
-    def layer_distance(self, layer: etree.Element) -> tuple[float, float]:
-        """Calculate engrave and travel distances, accounting for subpaths"""
+    def layer_distance(self, layer: etree.Element, start_point: tuple[float, float] = (0.0, 0.0)) -> tuple[float, float, tuple[float, float]]:
+        """Calculate engrave and travel distances, accounting for subpaths.
+        
+        Args:
+            layer: The layer element to process
+            start_point: Starting point for travel calculation (default: origin)
+        
+        Returns:
+            Tuple of (engrave_distance, travel_distance, end_point)
+        """
         elements = get_sorted_elements(layer)
         
         engrave = 0.0
         travel = 0.0
-        
-        last_point = (0.0, 0.0)  # Start from origin for first travel calculation
+        last_point = start_point
         
         for elem in elements:
             subpaths = get_element_subpaths(elem)
@@ -66,13 +73,12 @@ class LayerDataDialog(inkex.EffectExtension):
                     engrave += math.dist(p1[1], p2[1])
                 
                 # Calculate travel to start of this subpath
-                x0, y0 = subpath[0][1]
-                travel += math.dist(last_point, (x0, y0))
+                travel += math.dist(last_point, subpath[0][1])
                 last_point = subpath[-1][1]  # Update to end of this subpath
         
         engrave = self.svg.unit_to_viewport(engrave, DIST_UNIT)
         travel = self.svg.unit_to_viewport(travel, DIST_UNIT)
-        return engrave, travel
+        return engrave, travel, last_point
     
     def effect(self):
         svg = self.document.getroot()
@@ -138,13 +144,14 @@ class LayerDataDialog(inkex.EffectExtension):
             times[i] = (active, times[i][1])
             update_summary()
 
+        last_point = (0.0, 0.0)  # Start from origin for first layer
         for idx, layer in enumerate(layers, start=1):
             name = get_layer_name(layer)
             p = int(layer.get('data-passes') or 1)
             s = int(layer.get('data-speed') or 0)
             pw = int(layer.get('data-power') or 0)
             act = layer.get('data-active') == 'true'
-            eng, trv = self.layer_distance(layer)
+            eng, trv, last_point = self.layer_distance(layer, last_point)
 
             lbl = Gtk.Label(label=name, xalign=0)
             spin_p = Gtk.SpinButton(adjustment=Gtk.Adjustment(value=p, lower=1, upper=20, step_increment=1, page_increment=5, page_size=0), digits=0)
