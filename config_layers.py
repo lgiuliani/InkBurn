@@ -53,24 +53,21 @@ class LayerDataDialog(inkex.EffectExtension):
         engrave = 0.0
         travel = 0.0
         
-        last_point = None  # Track last point for travel calculation
+        last_point = (0.0, 0.0)  # Start from origin for first travel calculation
         
         for elem in elements:
             subpaths = get_element_subpaths(elem)
             if not subpaths:
                 continue
             
-            for subpath_idx, subpath in enumerate(subpaths):
+            for subpath in subpaths:
                 # Calculate engrave distance within this subpath
-                for i in range(len(subpath) - 1):
-                    x1, y1 = subpath[i][1]
-                    x2, y2 = subpath[i+1][1]
-                    engrave += math.hypot(x2 - x1, y2 - y1)
+                for p1, p2 in zip(subpath[:-1], subpath[1:]):
+                    engrave += math.dist(p1[1], p2[1])
                 
                 # Calculate travel to start of this subpath
                 x0, y0 = subpath[0][1]
-                if last_point is not None:
-                    travel += math.hypot(x0 - last_point[0], y0 - last_point[1])
+                travel += math.dist(last_point, (x0, y0))
                 last_point = subpath[-1][1]  # Update to end of this subpath
         
         engrave = self.svg.unit_to_viewport(engrave, DIST_UNIT)
