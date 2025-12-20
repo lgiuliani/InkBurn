@@ -115,11 +115,7 @@ class LayerDataDialog(inkex.EffectExtension):
             total = sum(t for a, t in times if a)
             human, _ = human_time(total)
             summary_lbl.set_text(f"Total: {human}")
-            tooltip = "\n".join(
-                f"{get_layer_name(layers[i])}: {times[i][1]:.1f}min"
-                for i in range(len(times)) if times[i][0]
-            )
-            summary_lbl.set_tooltip_text(tooltip)
+            # no tooltip for summary label
 
         def make_updater(i, spin_p, spin_s, chk, lbl_time, eng, trv):
             def upd(*args):
