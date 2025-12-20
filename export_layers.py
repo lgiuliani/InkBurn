@@ -24,6 +24,7 @@ from common import get_layer_name, is_visible, get_sorted_elements, list_layers
 SMAX = 1000          # Maximum laser power
 TRAVEL_SPEED = 3000  # mm/min for travel moves
 CURVE_SAMPLE = 0.1   # mm per interpolation step for curves
+COORD_PRECISION = 3  # Decimal precision for coordinate output
 # KERF_WIDTH = 0.1
 DEBUG = 0
 
@@ -61,9 +62,9 @@ class ExportGCode(inkex.Effect):
         # Add coordinates that changed
         coords = []
         if self.state['last_x'] != x:
-            coords.append(f'X{x:.3f}')
+            coords.append(f'X{x:.{COORD_PRECISION}f}')
         if self.state['last_y'] != y:
-            coords.append(f'Y{y:.3f}')
+            coords.append(f'Y{y:.{COORD_PRECISION}f}')
             
         if coords:
             parts.append(' '.join(coords))
