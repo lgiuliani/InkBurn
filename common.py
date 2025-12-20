@@ -19,6 +19,7 @@ import os
 from lxml import etree
 import inkex
 from inkex.paths import CubicSuperPath
+from inkex.transforms import Transform
 from inkex import Rectangle, Circle, Ellipse, Line, Polyline, Polygon, TextElement
 
 NS = { 'svg': 'http://www.w3.org/2000/svg',
@@ -66,6 +67,17 @@ def get_sorted_elements(layer: etree) -> list:
     # Sort elements for optimal cutting path (left to right, top to bottom)
     #return sorted(elements, key=lambda e: (e.bounding_box().x, e.bounding_box().y))
     return elements
+
+def get_element_subpaths(elem):
+    """Get subpaths for an element, with transforms applied"""
+    try:
+        transform = Transform(elem.composed_transform())
+        path = elem.path.transform(transform)
+        superpath = path.to_superpath()
+        return superpath
+    except Exception as e:
+        inkex.utils.debug(f"Error processing element {elem.get('id', '')}: {str(e)}")
+        return None
 
 def get_element_points(elem):
     tag = etree.QName(elem).localname

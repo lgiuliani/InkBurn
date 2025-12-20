@@ -17,9 +17,8 @@
  #
 import inkex
 from pathlib import Path
-from inkex.transforms import Transform
 from inkex import bezier
-from common import get_layer_name, is_visible, get_sorted_elements, list_layers
+from common import get_layer_name, is_visible, get_sorted_elements, list_layers, get_element_subpaths
 
 SMAX = 1000          # Maximum laser power
 TRAVEL_SPEED = 4000  # mm/min for travel moves
@@ -90,38 +89,35 @@ class ExportGCode(inkex.Effect):
 
         commands = []
         for elem in elements:
-            try:
-                # Get transformed path with kerf compensation
-                transform = Transform(elem.composed_transform())
-                path = elem.path.transform(transform)
-                
-                #if KERF_WIDTH > 0:
-                #    path = path.offset(self.KERF_WIDTH/2)
-                
-                superpath = path.to_superpath()
-                bezier.cspsubdiv(superpath, CURVE_SAMPLE)
-                
-                # Add element comment
-                comment = f"; {elem.tag_name} {elem.get('id', '')} {elem.get('d')}"
-                commands.append(comment[:80])
-                
-                for subpath in superpath:
-                    if not subpath or len(subpath) < 1:
-                        continue
-                        
-                    # Move to path start with travel move
-                    x0, y0 = subpath[0][1]
-                    if move_cmds := self.add_move(x0, viewbox_height - y0, 'G0'):
-                        commands.extend(move_cmds)
-                    
-                    # Process remaining points with cutting moves
-                    for point in subpath[1:]:
-                        x, y = point[1]
-                        if move_cmds := self.add_move(x, viewbox_height - y, 'G1'):
-                            commands.extend(move_cmds)
+            # Get subpaths with transforms applied
+            superpath = get_element_subpaths(elem)
+            if not superpath:
+                continue
             
-            except Exception as e:
-                inkex.utils.debug(f"Error processing element {elem.get('id', '')}: {str(e)}")
+            #if KERF_WIDTH > 0:
+            #    path = path.offset(self.KERF_WIDTH/2)
+            
+            # Subdivide curves for smoother output
+            bezier.cspsubdiv(superpath, CURVE_SAMPLE)
+            
+            # Add element comment
+            comment = f"; {elem.tag_name} {elem.get('id', '')} {elem.get('d')}"
+            commands.append(comment[:80])
+            
+            for subpath in superpath:
+                if not subpath or len(subpath) < 1:
+                    continue
+                    
+                # Move to path start with travel move
+                x0, y0 = subpath[0][1]
+                if move_cmds := self.add_move(x0, viewbox_height - y0, 'G0'):
+                    commands.extend(move_cmds)
+                
+                # Process remaining points with cutting moves
+                for point in subpath[1:]:
+                    x, y = point[1]
+                    if move_cmds := self.add_move(x, viewbox_height - y, 'G1'):
+                        commands.extend(move_cmds)
     
         return commands
 

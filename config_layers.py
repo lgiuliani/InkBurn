@@ -18,7 +18,7 @@
 import inkex
 from lxml import etree
 import math
-from common import list_layers, get_layer_name, get_sorted_elements, get_element_points
+from common import list_layers, get_layer_name, get_sorted_elements, get_element_points, get_element_subpaths
 
 # GTK3 for the GUI
 import gi
@@ -27,7 +27,7 @@ from gi.repository import Gtk
 
 # Constants
 DIST_UNIT = "mm"
-TRAVEL_SPEED = 3000  # travel speed in mm/min for laser movement between objects
+TRAVEL_SPEED = 4000  # travel speed in mm/min for laser movement between objects
 ROW_HEIGHT = 30      # approx height per row in pixels
 HEADER_HEIGHT = 150  # header height in pixels
 MAX_HEIGHT = 800     # max dialog height
@@ -47,22 +47,36 @@ class LayerDataDialog(inkex.EffectExtension):
         super().__init__()
 
     def layer_distance(self, layer: etree.Element) -> tuple[float, float]:
-        elements = [
-            get_element_points(elem) for elem in get_sorted_elements(layer)
-            if (sp := get_element_points(elem))
-        ]
-
-        engrave = sum(
-            math.hypot(pts[i+1][0]-pts[i][0], pts[i+1][1]-pts[i][1])
-            for pts in elements for i in range(len(pts)-1)
-        )
-        travel = sum(
-            math.hypot(
-                elements[i+1][0][0] - elements[i][-1][0],
-                elements[i+1][0][1] - elements[i][-1][1]
-            ) for i in range(len(elements)-1)
-        )
-
+        """Calculate engrave and travel distances, accounting for subpaths"""
+        elements = get_sorted_elements(layer)
+        
+        engrave = 0.0
+        travel = 0.0
+        
+        last_point = None  # Track last point for travel calculation
+        
+        for elem in elements:
+            subpaths = get_element_subpaths(elem)
+            if not subpaths:
+                continue
+            
+            for subpath_idx, subpath in enumerate(subpaths):
+                if not subpath or len(subpath) < 1:
+                    continue
+                
+                # Calculate engrave distance within this subpath
+                for i in range(len(subpath) - 1):
+                    x1, y1 = subpath[i][1]
+                    x2, y2 = subpath[i+1][1]
+                    engrave += math.hypot(x2 - x1, y2 - y1)
+                
+                # Calculate travel to start of this subpath
+                if subpath:
+                    x0, y0 = subpath[0][1]
+                    if last_point is not None:
+                        travel += math.hypot(x0 - last_point[0], y0 - last_point[1])
+                    last_point = subpath[-1][1]  # Update to end of this subpath
+        
         engrave = self.svg.unit_to_viewport(engrave, DIST_UNIT)
         travel = self.svg.unit_to_viewport(travel, DIST_UNIT)
         return engrave, travel
