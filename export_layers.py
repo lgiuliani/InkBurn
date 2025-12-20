@@ -22,9 +22,9 @@ from inkex import bezier
 from common import get_layer_name, is_visible, get_sorted_elements, list_layers
 
 SMAX = 1000          # Maximum laser power
-TRAVEL_SPEED = 3000  # mm/min for travel moves
+TRAVEL_SPEED = 4000  # mm/min for travel moves
 CURVE_SAMPLE = 0.1   # mm per interpolation step for curves
-COORD_PRECISION = 3  # Decimal precision for coordinate output
+COORD_PRECISION = 2  # Decimal precision for coordinate output
 # KERF_WIDTH = 0.1
 DEBUG = 0
 
@@ -145,9 +145,9 @@ class ExportGCode(inkex.Effect):
                 continue
             commands = self.process_element_to_gcode(elements, viewbox_height)
 
-            gcode.append(f'; Layer: {label} | Passes: {passes} | Speed: {speed} | Power: {power}%')
+            gcode.append(f'; Layer: {label} | Passes: {passes} | Speed: {speed} | Power: {power/10}%')
             for p in range(passes):
-                gcode.append(f'; --- Pass {p+1}/{passes}')
+                gcode.append(f'; --- {label} - Pass {p+1}/{passes}')
                 gcode.append(f'G1 F{speed} S{power}')
                 gcode.extend(commands)
                 gcode.append(f'G0 F{TRAVEL_SPEED}')
