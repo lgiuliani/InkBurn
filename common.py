@@ -95,12 +95,11 @@ def get_element_points(elem):
 
     return None
 
-def layer_distance(layer: etree.Element, svg, start_point: tuple[float, float] = (0.0, 0.0), dist_unit: str = "mm") -> tuple[float, float, tuple[float, float]]:
+def layer_distance(layer: etree.Element,start_point: tuple[float, float] = (0.0, 0.0), dist_unit: str = "mm") -> tuple[float, float, tuple[float, float]]:
     """Calculate engrave and travel distances for a layer.
 
     This is a general utility moved from `config_layers.py` so it can be
-    reused across modules. It returns (engrave_distance, travel_distance, end_point)
-    with distances converted to `dist_unit` using the provided `svg` instance.
+    reused across modules. It returns (engrave_distance, travel_distance, end_point).
     """
     elements = get_sorted_elements(layer)
 
@@ -120,6 +119,4 @@ def layer_distance(layer: etree.Element, svg, start_point: tuple[float, float] =
             travel += math.dist(last_point, subpath[0][1])
             last_point = subpath[-1][1]
 
-    engrave = svg.unit_to_viewport(engrave, dist_unit)
-    travel = svg.unit_to_viewport(travel, dist_unit)
     return engrave, travel, last_point

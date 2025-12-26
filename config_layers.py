@@ -115,7 +115,11 @@ class LayerDataDialog(inkex.EffectExtension):
             s = int(layer.get('data-speed') or 0)
             pw = int(layer.get('data-power') or 0)
             act = layer.get('data-active') == 'true'
-            eng, trv, last_point = self.layer_distance(layer, last_point)
+            eng, trv, last_point = layer_distance(layer, last_point)
+
+            # Convert distances to document unit
+            eng  = svg.unit_to_viewport(eng, dist_unit)
+            trv = svg.unit_to_viewport(trv, dist_unit)
 
             lbl = Gtk.Label(label=name, xalign=0)
             spin_p = Gtk.SpinButton(adjustment=Gtk.Adjustment(value=p, lower=1, upper=20, step_increment=1, page_increment=5, page_size=0), digits=0)
