@@ -18,15 +18,18 @@
 import inkex
 from lxml import etree
 from common import list_layers, get_layer_name, get_element_points, layer_distance
+from config_global import load_config, CONFIG_SECTION
 
 # GTK3 for the GUI
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
-# Constants
-DIST_UNIT = "mm"
-TRAVEL_SPEED = 4000  # travel speed in mm/min for laser movement between objects
+# Defaults constants
+DEFAULT_MAX_TRAVEL_SPEED = 10000  # Maximum travel speed in mm/min
+DEFAULT_DIST_UNIT = 'mm'        # Default distance unit
+
+# GUI layout constants
 ROW_HEIGHT = 30      # approx height per row in pixels
 HEADER_HEIGHT = 150  # header height in pixels
 MAX_HEIGHT = 800     # max dialog height
@@ -50,6 +53,11 @@ class LayerDataDialog(inkex.EffectExtension):
     
     def effect(self):
         svg = self.document.getroot()
+        # Load global configuration (inkburn.ini)
+        cp = load_config()
+        cfg = cp[CONFIG_SECTION]
+        unit = cfg.get('unit', 'mm')
+        travel_speed = float(cfg.get('max_travel_speed', '4000'))
         layers = list(list_layers(svg))
         if not layers:
             inkex.errormsg("No layers found.")
@@ -92,7 +100,7 @@ class LayerDataDialog(inkex.EffectExtension):
                 engr = eng * cp
                 trav = trv * cp
                 e_min = (engr / cs) if cs > 0 else 0
-                t_min = (trav / TRAVEL_SPEED)
+                t_min = (trav / travel_speed)
                 tot = e_min + t_min
                 hstr, _ = human_time(tot)
                 lbl_time.set_text(hstr)
@@ -117,9 +125,9 @@ class LayerDataDialog(inkex.EffectExtension):
             act = layer.get('data-active') == 'true'
             eng, trv, last_point = layer_distance(layer, last_point)
 
-            # Convert distances to document unit
-            eng  = svg.unit_to_viewport(eng, DIST_UNIT)
-            trv = svg.unit_to_viewport(trv, DIST_UNIT)
+            # Convert distances to configured unit (from inkburn.ini)
+            eng  = svg.unit_to_viewport(eng, unit)
+            trv = svg.unit_to_viewport(trv, unit)
 
             lbl = Gtk.Label(label=name, xalign=0)
             spin_p = Gtk.SpinButton(adjustment=Gtk.Adjustment(value=p, lower=1, upper=20, step_increment=1, page_increment=5, page_size=0), digits=0)
