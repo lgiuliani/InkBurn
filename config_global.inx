@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
+  <name>Global options</name>
+  <id>org.laurent.config_global</id>
+  <effect implements-custom-gui="true" show-stderr="true">
+    <effects-menu>
+      <submenu name="Ink/Burn" translatable="no"/>
+    </effects-menu>
+  </effect>
+  <script>
+    <command location="inx" interpreter="python">config_global.py</command>
+  </script>
+</inkscape-extension>
