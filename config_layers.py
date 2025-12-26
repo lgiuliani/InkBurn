@@ -45,11 +45,6 @@ def human_time(minutes: float) -> tuple[str, int]:
     return f"{hours:d}:{minutes:02d}:{seconds:02d}", total_seconds
 
 class LayerDataDialog(inkex.EffectExtension):
-    def __init__(self):
-        super().__init__()
-
-    # `layer_distance` moved to `common.py` as a reusable utility. Use:
-    # eng, trv, last_point = layer_distance(layer, self.svg, start_point, DIST_UNIT)
     
     def effect(self):
         svg = self.document.getroot()
@@ -58,6 +53,7 @@ class LayerDataDialog(inkex.EffectExtension):
         cfg = cp[CONFIG_SECTION]
         unit = cfg.get('unit', 'mm')
         travel_speed = float(cfg.get('max_travel_speed', '4000'))
+        
         layers = list(list_layers(svg))
         if not layers:
             inkex.errormsg("No layers found.")
