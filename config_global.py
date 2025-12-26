@@ -33,8 +33,8 @@ DEFAULTS = {
 
 
 def get_config_path() -> str:
-    xdg = os.environ.get('XDG_CONFIG_HOME') or os.path.join(os.path.expanduser('~'), '.config')
-    return os.path.join(xdg, 'inkburn.ini')
+    path = os.path.dirname(os.path.realpath(__file__))
+    return os.path.join(path, 'inkburn.ini')
 
 
 def load_config() -> configparser.ConfigParser:
