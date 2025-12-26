@@ -21,6 +21,7 @@ import inkex
 from inkex.paths import CubicSuperPath
 from inkex.transforms import Transform
 from inkex import Rectangle, Circle, Ellipse, Line, Polyline, Polygon, TextElement
+import math
 
 NS = { 'svg': 'http://www.w3.org/2000/svg',
     'inkscape': 'http://www.inkscape.org/namespaces/inkscape'}
@@ -93,3 +94,32 @@ def get_element_points(elem):
         return [tuple(seg[1]) for sub in sp for seg in sub]
 
     return None
+
+def layer_distance(layer: etree.Element, svg, start_point: tuple[float, float] = (0.0, 0.0), dist_unit: str = "mm") -> tuple[float, float, tuple[float, float]]:
+    """Calculate engrave and travel distances for a layer.
+
+    This is a general utility moved from `config_layers.py` so it can be
+    reused across modules. It returns (engrave_distance, travel_distance, end_point)
+    with distances converted to `dist_unit` using the provided `svg` instance.
+    """
+    elements = get_sorted_elements(layer)
+
+    engrave = 0.0
+    travel = 0.0
+    last_point = start_point
+
+    for elem in elements:
+        subpaths = get_element_subpaths(elem)
+        if not subpaths:
+            continue
+
+        for subpath in subpaths:
+            for p1, p2 in zip(subpath[:-1], subpath[1:]):
+                engrave += math.dist(p1[1], p2[1])
+
+            travel += math.dist(last_point, subpath[0][1])
+            last_point = subpath[-1][1]
+
+    engrave = svg.unit_to_viewport(engrave, dist_unit)
+    travel = svg.unit_to_viewport(travel, dist_unit)
+    return engrave, travel, last_point

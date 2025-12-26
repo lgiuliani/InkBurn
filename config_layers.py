@@ -17,8 +17,7 @@
  #
 import inkex
 from lxml import etree
-import math
-from common import list_layers, get_layer_name, get_sorted_elements, get_element_points, get_element_subpaths
+from common import list_layers, get_layer_name, get_element_points, layer_distance
 
 # GTK3 for the GUI
 import gi
@@ -46,39 +45,8 @@ class LayerDataDialog(inkex.EffectExtension):
     def __init__(self):
         super().__init__()
 
-    def layer_distance(self, layer: etree.Element, start_point: tuple[float, float] = (0.0, 0.0)) -> tuple[float, float, tuple[float, float]]:
-        """Calculate engrave and travel distances, accounting for subpaths.
-        
-        Args:
-            layer: The layer element to process
-            start_point: Starting point for travel calculation (default: origin)
-        
-        Returns:
-            Tuple of (engrave_distance, travel_distance, end_point)
-        """
-        elements = get_sorted_elements(layer)
-        
-        engrave = 0.0
-        travel = 0.0
-        last_point = start_point
-        
-        for elem in elements:
-            subpaths = get_element_subpaths(elem)
-            if not subpaths:
-                continue
-            
-            for subpath in subpaths:
-                # Calculate engrave distance within this subpath
-                for p1, p2 in zip(subpath[:-1], subpath[1:]):
-                    engrave += math.dist(p1[1], p2[1])
-                
-                # Calculate travel to start of this subpath
-                travel += math.dist(last_point, subpath[0][1])
-                last_point = subpath[-1][1]  # Update to end of this subpath
-        
-        engrave = self.svg.unit_to_viewport(engrave, DIST_UNIT)
-        travel = self.svg.unit_to_viewport(travel, DIST_UNIT)
-        return engrave, travel, last_point
+    # `layer_distance` moved to `common.py` as a reusable utility. Use:
+    # eng, trv, last_point = layer_distance(layer, self.svg, start_point, DIST_UNIT)
     
     def effect(self):
         svg = self.document.getroot()
