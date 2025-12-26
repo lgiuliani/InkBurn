@@ -95,7 +95,7 @@ def get_element_points(elem):
 
     return None
 
-def layer_distance(layer: etree.Element,start_point: tuple[float, float] = (0.0, 0.0), dist_unit: str = "mm") -> tuple[float, float, tuple[float, float]]:
+def layer_distance(layer: etree.Element,start_point: tuple[float, float] = (0.0, 0.0)) -> tuple[float, float, tuple[float, float]]:
     """Calculate engrave and travel distances for a layer.
 
     This is a general utility moved from `config_layers.py` so it can be
