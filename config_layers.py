@@ -131,7 +131,7 @@ class LayerDataDialog(inkex.EffectExtension):
 
             lbl = Gtk.Label(label=name, xalign=0)
             spin_p = Gtk.SpinButton(adjustment=Gtk.Adjustment(value=p, lower=1, upper=20, step_increment=1, page_increment=5, page_size=0), digits=0)
-            spin_s = Gtk.SpinButton(adjustment=Gtk.Adjustment(value=s, lower=100, upper=10000, step_increment=100, page_increment=10, page_size=0), digits=0)
+            spin_s = Gtk.SpinButton(adjustment=Gtk.Adjustment(value=s, lower=100, upper=travel_speed, step_increment=100, page_increment=10, page_size=0), digits=0)
             spin_pw = Gtk.SpinButton(adjustment=Gtk.Adjustment(value=pw, lower=0, upper=100, step_increment=1, page_increment=10, page_size=0), digits=0)
             chk = Gtk.CheckButton()
             chk.set_active(act)
