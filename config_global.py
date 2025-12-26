@@ -97,9 +97,8 @@ class GlobalOptionsDialog(inkex.EffectExtension):
         btn_browse = Gtk.Button(label="Browse")
 
         def on_browse(_):
-            dlg = Gtk.FileChooserDialog(title="Choose program", action=Gtk.FileChooserAction.OPEN,
-                                        buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                                                 Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+            dlg = Gtk.FileChooserDialog(title="Choose program", action=Gtk.FileChooserAction.OPEN)
+            dlg.add_buttons("Cancel", Gtk.ResponseType.CANCEL, "Open", Gtk.ResponseType.OK)
             if dlg.run() == Gtk.ResponseType.OK:
                 entry_path.set_text(dlg.get_filename())
             dlg.destroy()

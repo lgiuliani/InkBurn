@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
-  <name>Global options</name>
+  <name>Parameters</name>
   <id>org.laurent.config_global</id>
   <effect implements-custom-gui="true" show-stderr="true">
     <effects-menu>
