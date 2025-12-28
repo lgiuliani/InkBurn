@@ -65,8 +65,6 @@ def get_sorted_elements(layer: etree) -> list:
 
         elements.append(elem)
     
-    # Sort elements for optimal cutting path (left to right, top to bottom)
-    #return sorted(elements, key=lambda e: (e.bounding_box().x, e.bounding_box().y))
     return elements
 
 def get_element_subpaths(elem):
@@ -87,8 +85,8 @@ def get_element_points(elem):
         d = elem.get('d')
         if d:
             sp = CubicSuperPath(d)
-    #elif tag in {'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'text'}:
-    #    sp = elem.get_path().to_superpath()
+    else:
+        inkex.utils.debug(f"Error processing element {elem.get('id', '')}: {str(tag)}")
 
     if sp:
         return [tuple(seg[1]) for sub in sp for seg in sub]
