@@ -19,6 +19,8 @@ import inkex
 from pathlib import Path
 from inkex import bezier
 from common import get_layer_name, is_visible, get_sorted_elements, list_layers, get_element_subpaths
+import subprocess
+from sys import platform
 import config_global
 
 SMAX = 1000          # Maximum laser power
@@ -40,6 +42,14 @@ FOOTER_GCODE = [
     f'G0 X0 Y0 ; return to origin',
     'M2 ; end program'
 ]
+
+def openfile(filename):
+    """Open filename"""
+    if platform == "win32":
+        startfile(filename)
+    else:
+        opener = "open" if platform == "darwin" else "xdg-open"
+        subprocess.call([opener, filename])
 
 class ExportGCode(inkex.OutputExtension):
     """
@@ -157,24 +167,13 @@ class ExportGCode(inkex.OutputExtension):
         outpath = Path(self.document_path() or '').with_suffix('.nc')
         outpath.write_text("\n".join(gcode), encoding='utf-8')
 
-
-    # def effect(self) -> None:
-    #     gcode = HEADER_GCODE.copy()
-    #     gcode += self.process_layers()
-    #     gcode += FOOTER_GCODE
-
-    #     outpath = Path(self.document_path() or '').with_suffix('.nc')
-    #     outpath.write_text("\n".join(gcode), encoding='utf-8')
-
-
         # Autolaunch laser program if enabled in config
         try:
             cp = config_global.load_config()
             cfg = cp[config_global.CONFIG_SECTION]
             if cfg.get('autolaunch', 'false').lower() == 'true':
                 try:
-                    import launch_LaserGRBL
-                    launch_LaserGRBL.openfile(str(outpath))
+                    openfile(str(outpath))
                 except Exception as e:
                     inkex.utils.debug(f"Autolaunch failed: {e}")
         except Exception as e:
