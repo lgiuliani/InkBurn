@@ -19,6 +19,7 @@ import inkex
 from pathlib import Path
 from inkex import bezier
 from common import get_layer_name, is_visible, get_sorted_elements, list_layers, get_element_subpaths
+import config_global
 
 SMAX = 1000          # Maximum laser power
 TRAVEL_SPEED = 4000  # mm/min for travel moves
@@ -165,6 +166,19 @@ class ExportGCode(inkex.OutputExtension):
     #     outpath = Path(self.document_path() or '').with_suffix('.nc')
     #     outpath.write_text("\n".join(gcode), encoding='utf-8')
 
+
+        # Autolaunch laser program if enabled in config
+        try:
+            cp = config_global.load_config()
+            cfg = cp[config_global.CONFIG_SECTION]
+            if cfg.get('autolaunch', 'false').lower() == 'true':
+                try:
+                    import launch_LaserGRBL
+                    launch_LaserGRBL.openfile(str(outpath))
+                except Exception as e:
+                    inkex.utils.debug(f"Autolaunch failed: {e}")
+        except Exception as e:
+            inkex.utils.debug(f"Failed to read config for autolaunch: {e}")
 
 if __name__ == '__main__':
     ExportGCode().run()
