@@ -40,7 +40,7 @@ FOOTER_GCODE = [
     'M2 ; end program'
 ]
 
-class ExportGCode(inkex.Effect):
+class ExportGCode(inkex.OutputExtension):
     """
     Optimized G-code generator with:
     - Redundant command elimination
@@ -115,6 +115,7 @@ class ExportGCode(inkex.Effect):
 
     def process_layers(self) -> list:
         """Process all elements in all layers and return G-code commands"""
+        self.preprocess()
         svg = self.document.getroot()
         layers = list_layers(svg)
         viewbox_height = svg.viewbox_height
@@ -147,15 +148,23 @@ class ExportGCode(inkex.Effect):
             
         return gcode
 
-    def effect(self) -> None:
+    def save(self, stream):
         gcode = HEADER_GCODE.copy()
         gcode += self.process_layers()
         gcode += FOOTER_GCODE
 
         outpath = Path(self.document_path() or '').with_suffix('.nc')
         outpath.write_text("\n".join(gcode), encoding='utf-8')
-        if DEBUG:
-            inkex.utils.debug(f"GCode written to: {outpath}")
+
+
+    # def effect(self) -> None:
+    #     gcode = HEADER_GCODE.copy()
+    #     gcode += self.process_layers()
+    #     gcode += FOOTER_GCODE
+
+    #     outpath = Path(self.document_path() or '').with_suffix('.nc')
+    #     outpath.write_text("\n".join(gcode), encoding='utf-8')
+
 
 if __name__ == '__main__':
     ExportGCode().run()

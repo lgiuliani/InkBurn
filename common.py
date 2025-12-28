@@ -87,8 +87,8 @@ def get_element_points(elem):
         d = elem.get('d')
         if d:
             sp = CubicSuperPath(d)
-    elif tag in {'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'text'}:
-        sp = elem.get_path().to_superpath()
+    #elif tag in {'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'text'}:
+    #    sp = elem.get_path().to_superpath()
 
     if sp:
         return [tuple(seg[1]) for sub in sp for seg in sub]
