@@ -21,6 +21,7 @@ from inkex import bezier
 from common import get_layer_name, is_visible, get_sorted_elements, list_layers, get_element_subpaths
 import subprocess
 from sys import platform
+from os import startfile
 import config_global
 
 SMAX = 1000          # Maximum laser power

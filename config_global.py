@@ -25,9 +25,9 @@ from gi.repository import Gtk
 CONFIG_SECTION = 'InkBurn'
 DEFAULTS = {
     'autolaunch': 'false',
-    'laser_program': 'LaserGRBL',
-    'laser_path': '',
-    'unit': 'mm',
+    # 'laser_program': 'LaserGRBL',
+    # 'laser_path': '',
+    # 'unit': 'mm',
     'max_travel_speed': '4000'
 }
 
@@ -80,43 +80,43 @@ class GlobalOptionsDialog(inkex.EffectExtension):
         chk_autolaunch.set_active(cfg.get('autolaunch', 'false').lower() == 'true')
         grid.attach(chk_autolaunch, 0, 0, 3, 1)
 
-        # Laser program choice
-        lbl_prog = Gtk.Label(label="Laser program", xalign=0)
-        combo_prog = Gtk.ComboBoxText()
-        combo_prog.append_text("LaserGRBL")
-        combo_prog.append_text("Other")
-        prog = cfg.get('laser_program', DEFAULTS['laser_program'])
-        combo_prog.set_active(0 if prog == 'LaserGRBL' else 1)
-        grid.attach(lbl_prog, 0, 1, 1, 1)
-        grid.attach(combo_prog, 1, 1, 2, 1)
+        # # Laser program choice
+        # lbl_prog = Gtk.Label(label="Laser program", xalign=0)
+        # combo_prog = Gtk.ComboBoxText()
+        # combo_prog.append_text("LaserGRBL")
+        # combo_prog.append_text("Other")
+        # prog = cfg.get('laser_program', DEFAULTS['laser_program'])
+        # combo_prog.set_active(0 if prog == 'LaserGRBL' else 1)
+        # grid.attach(lbl_prog, 0, 1, 1, 1)
+        # grid.attach(combo_prog, 1, 1, 2, 1)
 
-        # Program path and browse
-        lbl_path = Gtk.Label(label="Program path", xalign=0)
-        entry_path = Gtk.Entry()
-        entry_path.set_text(cfg.get('laser_path', ''))
-        btn_browse = Gtk.Button(label="Browse")
+        # # Program path and browse
+        # lbl_path = Gtk.Label(label="Program path", xalign=0)
+        # entry_path = Gtk.Entry()
+        # entry_path.set_text(cfg.get('laser_path', ''))
+        # btn_browse = Gtk.Button(label="Browse")
 
-        def on_browse(_):
-            dlg = Gtk.FileChooserDialog(title="Choose program", action=Gtk.FileChooserAction.OPEN)
-            dlg.add_buttons("Cancel", Gtk.ResponseType.CANCEL, "Open", Gtk.ResponseType.OK)
-            if dlg.run() == Gtk.ResponseType.OK:
-                entry_path.set_text(dlg.get_filename())
-            dlg.destroy()
+        # def on_browse(_):
+        #     dlg = Gtk.FileChooserDialog(title="Choose program", action=Gtk.FileChooserAction.OPEN)
+        #     dlg.add_buttons("Cancel", Gtk.ResponseType.CANCEL, "Open", Gtk.ResponseType.OK)
+        #     if dlg.run() == Gtk.ResponseType.OK:
+        #         entry_path.set_text(dlg.get_filename())
+        #     dlg.destroy()
 
-        btn_browse.connect('clicked', on_browse)
-        grid.attach(lbl_path, 0, 2, 1, 1)
-        grid.attach(entry_path, 1, 2, 1, 1)
-        grid.attach(btn_browse, 2, 2, 1, 1)
+        # btn_browse.connect('clicked', on_browse)
+        # grid.attach(lbl_path, 0, 2, 1, 1)
+        # grid.attach(entry_path, 1, 2, 1, 1)
+        # grid.attach(btn_browse, 2, 2, 1, 1)
 
-        # Unit
-        lbl_unit = Gtk.Label(label="Unit", xalign=0)
-        combo_unit = Gtk.ComboBoxText()
-        combo_unit.append_text("mm")
-        combo_unit.append_text("in")
-        unit = cfg.get('unit', DEFAULTS['unit'])
-        combo_unit.set_active(0 if unit == 'mm' else 1)
-        grid.attach(lbl_unit, 0, 3, 1, 1)
-        grid.attach(combo_unit, 1, 3, 2, 1)
+        # # Unit
+        # lbl_unit = Gtk.Label(label="Unit", xalign=0)
+        # combo_unit = Gtk.ComboBoxText()
+        # combo_unit.append_text("mm")
+        # combo_unit.append_text("in")
+        # unit = cfg.get('unit', DEFAULTS['unit'])
+        # combo_unit.set_active(0 if unit == 'mm' else 1)
+        # grid.attach(lbl_unit, 0, 3, 1, 1)
+        # grid.attach(combo_unit, 1, 3, 2, 1)
 
         # Max travel speed
         lbl_speed = Gtk.Label(label="Max travel speed (mm/min)", xalign=0)
@@ -137,9 +137,9 @@ class GlobalOptionsDialog(inkex.EffectExtension):
 
         def on_save(_):
             cp[CONFIG_SECTION]['autolaunch'] = 'true' if chk_autolaunch.get_active() else 'false'
-            cp[CONFIG_SECTION]['laser_program'] = combo_prog.get_active_text() or DEFAULTS['laser_program']
-            cp[CONFIG_SECTION]['laser_path'] = entry_path.get_text()
-            cp[CONFIG_SECTION]['unit'] = combo_unit.get_active_text() or DEFAULTS['unit']
+            # cp[CONFIG_SECTION]['laser_program'] = combo_prog.get_active_text() or DEFAULTS['laser_program']
+            # cp[CONFIG_SECTION]['laser_path'] = entry_path.get_text()
+            # cp[CONFIG_SECTION]['unit'] = combo_unit.get_active_text() or DEFAULTS['unit']
             cp[CONFIG_SECTION]['max_travel_speed'] = str(int(spin_speed.get_value_as_int()))
             try:
                 save_config(cp)
@@ -150,9 +150,9 @@ class GlobalOptionsDialog(inkex.EffectExtension):
         def on_reset(_):
             cp[CONFIG_SECTION] = DEFAULTS.copy()
             chk_autolaunch.set_active(False)
-            combo_prog.set_active(0)
-            entry_path.set_text('')
-            combo_unit.set_active(0)
+            # combo_prog.set_active(0)
+            # entry_path.set_text('')
+            # combo_unit.set_active(0)
             spin_speed.set_value(float(DEFAULTS['max_travel_speed']))
 
         btn_save.connect('clicked', on_save)
