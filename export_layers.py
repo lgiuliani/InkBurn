@@ -94,15 +94,7 @@ class ExportGCode(inkex.OutputExtension):
             parts.append(command)
             self.last_state['command'] = command
 
-        # Add speed if changed
-        if speed != self.last_state['speed'] or speed is not None :
-            parts.append(f'F{speed}')
-            self.last_state['speed'] = speed
 
-        # Add power if changed
-        if power != self.last_state['power'] or power is not None :
-            parts.append(f'S{power}')
-            self.last_state['power'] = power
 
         # Add coordinates that changed
         coords = []
@@ -120,6 +112,16 @@ class ExportGCode(inkex.OutputExtension):
         # Update position last_state with rounded values
         self.last_state['x'] = x_rounded
         self.last_state['y'] = y_rounded
+
+                # Add speed if changed
+        if speed != self.last_state['speed'] or speed is not None :
+            parts.append(f'F{speed}')
+            self.last_state['speed'] = speed
+
+        # Add power if changed
+        if power != self.last_state['power'] or power is not None :
+            parts.append(f'S{power}')
+            self.last_state['power'] = power
         
         return [GCODE_SEPARATOR.join(parts)] if parts else []
 
