@@ -63,7 +63,16 @@ class LayerDataDialog(inkex.EffectExtension):
         # Compute desired height to show all layers; cap to screen and MAX_HEIGHT
         desired_height = HEADER_HEIGHT + ROW_HEIGHT * (len(layers) + 1)
         screen = Gdk.Screen.get_default()
-        screen_height = screen.get_height() if screen is not None else MAX_HEIGHT
+        # Prefer monitor geometry (avoids deprecated get_height()); fallback safely
+        if screen is not None:
+            try:
+                geom = screen.get_monitor_geometry(0)
+                screen_height = geom.height
+            except Exception:
+                # last resort fallback
+                screen_height = getattr(screen, 'get_height', lambda: MAX_HEIGHT)()
+        else:
+            screen_height = MAX_HEIGHT
         # leave some margin from screen edges
         max_allowed = min(screen_height - 80, MAX_HEIGHT)
         height = min(desired_height, max_allowed)
