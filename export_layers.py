@@ -62,7 +62,27 @@ class ExportGCode(inkex.OutputExtension):
     - 
     """ 
     def store_point(self, point: Vector2d, command: str, power: int = None, speed: int = None ) -> list:
-        """Add move command with optimized output"""            
+        """Generate optimized G-code command for a point with state tracking.
+
+        This function implements G-code optimization by only outputting commands when
+        parameters actually change from the previous state. It tracks the last state
+        of position, command type, power, and speed to avoid redundant commands.
+
+        Args:
+            point: Vector2d object containing x,y coordinates to move to
+            command: G-code command string (e.g., 'G0', 'G1')
+            power: Optional laser power value (S parameter)
+            speed: Optional feed rate value (F parameter)
+
+        Returns:
+            List containing the optimized G-code command string, or empty list if
+            no command is needed (position/command unchanged)
+
+        Note:
+            Coordinates are rounded to COORD_PRECISION decimal places and trailing
+            zeros are stripped for cleaner output. The function maintains internal
+            state to track what was last output.
+        """            
         parts = []
         
         # Round coordinates before comparison and formatting to avoid duplicates
