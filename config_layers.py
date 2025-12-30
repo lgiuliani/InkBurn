@@ -17,7 +17,7 @@
  #
 import inkex
 from lxml import etree
-from common import list_layers, get_layer_name, get_element_points, layer_distance
+from common import list_layers, get_layer_name, layer_distance
 from config_global import load_config, CONFIG_SECTION
 
 # GTK3 for the GUI

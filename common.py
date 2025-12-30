@@ -67,7 +67,7 @@ def get_sorted_elements(layer: etree) -> list:
     
     return elements
 
-def get_element_subpaths(elem):
+def get_element_paths(elem):
     """Get subpaths for an element, with transforms applied. Filters out empty subpaths."""
     try:
         transform = Transform(elem.composed_transform())
@@ -78,20 +78,6 @@ def get_element_subpaths(elem):
     except Exception as e:
         inkex.utils.debug(f"Error processing element {elem.get('id', '')}: {str(e)}")
         return None
-
-def get_element_points(elem):
-    tag = etree.QName(elem).localname
-    if tag == 'path':
-        d = elem.get('d')
-        if d:
-            sp = CubicSuperPath(d)
-    else:
-        inkex.utils.debug(f"Error processing element {elem.get('id', '')}: {str(tag)}")
-
-    if sp:
-        return [tuple(seg[1]) for sub in sp for seg in sub]
-
-    return None
 
 def layer_distance(layer: etree.Element,start_point: tuple[float, float] = (0.0, 0.0)) -> tuple[float, float, tuple[float, float]]:
     """Calculate engrave and travel distances for a layer.
@@ -106,7 +92,7 @@ def layer_distance(layer: etree.Element,start_point: tuple[float, float] = (0.0,
     last_point = start_point
 
     for elem in elements:
-        subpaths = get_element_subpaths(elem)
+        subpaths = get_element_paths(elem)
         if not subpaths:
             continue
 

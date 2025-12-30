@@ -19,7 +19,7 @@ import inkex
 from pathlib import Path
 from inkex import bezier
 from inkex.transforms import Vector2d
-from common import get_layer_name, is_visible, get_sorted_elements, list_layers, get_element_subpaths
+from common import get_layer_name, is_visible, get_sorted_elements, list_layers, get_element_paths
 import subprocess
 from sys import platform
 from os import startfile
@@ -70,7 +70,7 @@ class ExportGCode(inkex.OutputExtension):
 
         Args:
             point: Vector2d object containing x,y coordinates to move to
-            command: G-code command string (e.g., 'G0', 'G1')
+            command: Optional G-code command string (e.g., 'G0', 'G1')
             power: Optional laser power value (S parameter)
             speed: Optional feed rate value (F parameter)
 
@@ -123,26 +123,26 @@ class ExportGCode(inkex.OutputExtension):
         
         return [GCODE_SEPARATOR.join(parts)] if parts else []
 
-    def process_element_to_gcode(self, elements: list, viewbox_height: float) -> list:
+    def process_elements(self, elements: list, viewbox_height: float) -> list:
         """Convert a single SVG element to optimized G-code commands"""
         # Reset last_state tracking at layer start
         self.last_state = {'x': None, 'y': None, 'command': None, 'power': None, 'speed': None}
 
         commands = []
-        for elem in elements:
+        for node in elements:
             # Get subpaths with transforms applied
-            superpath = get_element_subpaths(elem)
-            if not superpath:
+            paths = get_element_paths(node)
+            if not paths:
                 continue
                     
             # Subdivide curves for smoother output
-            bezier.cspsubdiv(superpath, CURVE_SAMPLE)
+            bezier.cspsubdiv(paths, CURVE_SAMPLE)
             
-            # Add element comment
-            comment = f"; {elem.tag_name} {elem.get('id', '')} {elem.get('d')}"
+            # Add node comment
+            comment = f"; {node.tag_name} {node.get('id', '')} {node.get('d')}"
             commands.append(comment[:80])
             
-            for subpath in superpath:
+            for subpath in paths:
                 # Move to path start with travel move
                 x0, y0 = subpath[0][1]
                 point = Vector2d (x0, viewbox_height - y0)
@@ -182,7 +182,7 @@ class ExportGCode(inkex.OutputExtension):
             if not elements:
                 inkex.utils.debug(f"No visible elements in layer '{label}'")
                 continue
-            commands = self.process_element_to_gcode(elements, viewbox_height)
+            commands = self.process_elements(elements, viewbox_height)
 
             gcode.append(f'; Layer: {label} | Passes: {passes} | Speed: {speed} | Power: {power/10}%')
             for p in range(passes):
