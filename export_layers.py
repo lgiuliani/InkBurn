@@ -61,7 +61,7 @@ class ExportGCode(inkex.OutputExtension):
     - State-aware motion commands
     - 
     """ 
-    def store_point(self, point: Vector2d, command: str, power: int = None, speed: int = None ) -> list:
+    def store_point(self, point: Vector2d, command: str = None, power: int = None, speed: int = None ) -> list:
         """Generate optimized G-code command for a point with state tracking.
 
         This function implements G-code optimization by only outputting commands when
@@ -90,11 +90,9 @@ class ExportGCode(inkex.OutputExtension):
         y_rounded = round(point.y, COORD_PRECISION)
         
         # Add command type if changed
-        if command != self.last_state['command']:
+        if command != self.last_state['command'] or command is not None:
             parts.append(command)
             self.last_state['command'] = command
-
-
 
         # Add coordinates that changed
         coords = []
@@ -113,7 +111,7 @@ class ExportGCode(inkex.OutputExtension):
         self.last_state['x'] = x_rounded
         self.last_state['y'] = y_rounded
 
-                # Add speed if changed
+        # Add speed if changed
         if speed != self.last_state['speed'] or speed is not None :
             parts.append(f'F{speed}')
             self.last_state['speed'] = speed
