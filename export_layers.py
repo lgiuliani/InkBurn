@@ -180,7 +180,7 @@ class ExportGCode(inkex.OutputExtension):
 
             elements = get_sorted_elements(layer) 
             if not elements:
-                inkex.utils.debug(f"No visible elements in layer '{label}'")
+                inkex.utils.debug(f"No path elements in active layer '{label}'")
                 continue
             commands = self.process_elements(elements, viewbox_height)
 
