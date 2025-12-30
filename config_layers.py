@@ -35,6 +35,7 @@ ROW_HEIGHT = 30      # approx height per row in pixels
 HEADER_HEIGHT = 150  # header height in pixels
 MAX_HEIGHT = 800     # max dialog height
 DEFAULT_WIDTH = 650  # dialog width
+FIXED_SCREEN_HEIGHT = 640  # use an arbitrary fixed available height (px)
 
 #Functions
 def human_time(minutes: float) -> tuple[str, int]:
@@ -60,22 +61,10 @@ class LayerDataDialog(inkex.EffectExtension):
             inkex.errormsg("No layers found.")
             return
 
-        # Compute desired height to show all layers; cap to screen and MAX_HEIGHT
+        # Compute desired height to show all layers; cap to a fixed arbitrary height
         desired_height = HEADER_HEIGHT + ROW_HEIGHT * (len(layers) + 1)
-        screen = Gdk.Screen.get_default()
-        # Prefer monitor geometry (avoids deprecated get_height()); fallback safely
-        if screen is not None:
-            try:
-                geom = screen.get_monitor_geometry(0)
-                screen_height = geom.height
-            except Exception:
-                # last resort fallback
-                screen_height = getattr(screen, 'get_height', lambda: MAX_HEIGHT)()
-        else:
-            screen_height = MAX_HEIGHT
-        # leave some margin from screen edges
-        max_allowed = min(screen_height - 80, MAX_HEIGHT)
-        height = min(desired_height, max_allowed)
+        # Use a fixed available height (no runtime monitor probing): simpler and prettier
+        height = min(desired_height, FIXED_SCREEN_HEIGHT, MAX_HEIGHT)
 
         window = Gtk.Window(title="Ink/Burn : Configure layers")
         window.connect("delete-event", Gtk.main_quit)
