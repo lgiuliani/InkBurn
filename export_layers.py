@@ -18,6 +18,7 @@
 import inkex
 from pathlib import Path
 from inkex import bezier
+from inkex.transforms import Vector2d
 from common import get_layer_name, is_visible, get_sorted_elements, list_layers, get_element_subpaths
 import subprocess
 from sys import platform
@@ -60,24 +61,34 @@ class ExportGCode(inkex.OutputExtension):
     - State-aware motion commands
     - 
     """ 
-    def add_move(self, x: float , y: float, motion_type: str) -> list:
+    def store_point(self, point: Vector2d, command: str, power: int = None, speed: int = None ) -> list:
         """Add move command with optimized output"""            
         parts = []
         
         # Round coordinates before comparison and formatting to avoid duplicates
-        x_rounded = round(x, COORD_PRECISION)
-        y_rounded = round(y, COORD_PRECISION)
+        x_rounded = round(point.x, COORD_PRECISION)
+        y_rounded = round(point.y, COORD_PRECISION)
         
-        # Add motion type if changed
-        if motion_type != self.state['last_motion']:
-            parts.append(motion_type)
-            self.state['last_motion'] = motion_type
-            
+        # Add command type if changed
+        if command != self.last_state['command']:
+            parts.append(command)
+            self.last_state['command'] = command
+
+        # Add speed if changed
+        if speed != self.last_state['speed'] or speed is not None :
+            parts.append(f'F{speed}')
+            self.last_state['speed'] = speed
+
+        # Add power if changed
+        if power != self.last_state['power'] or power is not None :
+            parts.append(f'S{power}')
+            self.last_state['power'] = power
+
         # Add coordinates that changed
         coords = []
-        if self.state['last_x'] != x_rounded:
+        if self.last_state['x'] != x_rounded:
             coords.append(f'X{x_rounded:.{COORD_PRECISION}f}'.rstrip('0').rstrip('.'))
-        if self.state['last_y'] != y_rounded:
+        if self.last_state['y'] != y_rounded:
             coords.append(f'Y{y_rounded:.{COORD_PRECISION}f}'.rstrip('0').rstrip('.'))
             
         if coords:
@@ -86,16 +97,16 @@ class ExportGCode(inkex.OutputExtension):
             # Position didn't change and motion type same - nothing to output
             return []
             
-        # Update position state with rounded values
-        self.state['last_x'] = x_rounded
-        self.state['last_y'] = y_rounded
+        # Update position last_state with rounded values
+        self.last_state['x'] = x_rounded
+        self.last_state['y'] = y_rounded
         
         return [GCODE_SEPARATOR.join(parts)] if parts else []
 
     def process_element_to_gcode(self, elements: list, viewbox_height: float) -> list:
         """Convert a single SVG element to optimized G-code commands"""
-        # Reset state tracking at layer start
-        self.state = {'last_x': None, 'last_y': None, 'last_motion': None}
+        # Reset last_state tracking at layer start
+        self.last_state = {'x': None, 'y': None, 'command': None, 'power': None, 'speed': None}
 
         commands = []
         for elem in elements:
@@ -114,13 +125,15 @@ class ExportGCode(inkex.OutputExtension):
             for subpath in superpath:
                 # Move to path start with travel move
                 x0, y0 = subpath[0][1]
-                if move_cmds := self.add_move(x0, viewbox_height - y0, 'G0'):
+                point = Vector2d (x0, viewbox_height - y0)
+                if move_cmds := self.store_point(point, 'G0'):
                     commands.extend(move_cmds)
                 
                 # Process remaining points with cutting moves
                 for point in subpath[1:]:
                     x, y = point[1]
-                    if move_cmds := self.add_move(x, viewbox_height - y, 'G1'):
+                    point = Vector2d(x, viewbox_height - y)
+                    if move_cmds := self.store_point(point, 'G1'):
                         commands.extend(move_cmds)
     
         return commands
