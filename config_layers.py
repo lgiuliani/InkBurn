@@ -66,102 +66,220 @@ class LayerDataDialog(inkex.EffectExtension):
         window.connect("delete-event", Gtk.main_quit)
         window.set_default_size(DEFAULT_WIDTH, height)
 
-        vbox = Gtk.VBox(spacing=6, margin=12)
-        scrolled = Gtk.ScrolledWindow()
-        scrolled.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-        vbox.pack_start(scrolled, True, True, 0)
-        grid = Gtk.Grid(row_spacing=6, column_spacing=10, margin=6)
-        scrolled.add(grid)
+        root_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, margin=12)
 
-        headers = ["<b>Layer</b>", "<b>Pass Count</b>", "<b>Speed</b> (mm/min)",
-                   "<b>Power</b> (%)", "<b>Active</b>", "<b>Time</b>"]
-        for c, txt in enumerate(headers):
-            lbl_h = Gtk.Label(xalign=0)
-            lbl_h.set_markup(txt)
-            grid.attach(lbl_h, c, 0, 1, 1)
+        # Horizontal split: left = layer list, right = parameters for selected layer
+        hbox = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
+        root_box.pack_start(hbox, True, True, 0)
 
-        entries, times = [], []
+        # Left: list of layers
+        left_scrolled = Gtk.ScrolledWindow()
+        left_scrolled.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        listbox = Gtk.ListBox()
+        listbox.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        left_scrolled.add(listbox)
+
+        # Right: parameter editor for selected layer
+        right_frame = Gtk.Frame(label="Layer parameters")
+        right_box = Gtk.Grid(row_spacing=6, column_spacing=10, margin=8)
+        right_frame.add(right_box)
+
+        hbox.add1(left_scrolled)
+        hbox.add2(right_frame)
+
+        # Bottom: global summary and buttons
         summary_lbl = Gtk.Label(label="Total: 0:00:00", xalign=0)
 
-        def update_summary():
-            total = sum(t for a, t in times if a)
+        entries = []  # list of dicts per layer
+
+        # Helper to compute and format a layer's total time (minutes)
+        def compute_layer_minutes(entry):
+            cp = int(entry['spin_p'].get_value_as_int())
+            cs = int(entry['spin_s'].get_value_as_int())
+            engr = entry['eng'] * cp
+            trav = entry['trv'] * cp
+            e_min = (engr / cs) if cs > 0 else 0
+            t_min = (trav / travel_speed)
+            return e_min + t_min, engr, trav
+
+        def update_global_summary():
+            total = 0.0
+            for e in entries:
+                if e['chk'].get_active():
+                    mins, _, _ = compute_layer_minutes(e)
+                    total += mins
             human, _ = human_time(total)
             summary_lbl.set_text(f"Total: {human}")
-            # no tooltip for summary label
 
-        def make_updater(i, spin_p, spin_s, chk, lbl_time, eng, trv):
-            def upd(*args):
-                cp = spin_p.get_value_as_int()
-                cs = spin_s.get_value_as_int()
-                engr = eng * cp
-                trav = trv * cp
-                e_min = (engr / cs) if cs > 0 else 0
-                t_min = (trav / travel_speed)
-                tot = e_min + t_min
-                hstr, _ = human_time(tot)
-                lbl_time.set_text(hstr)
-                lbl_time.set_tooltip_text(f"Engrave: {engr:.1f}mm\nTravel: {trav:.1f}mm")
-                times[i] = (chk.get_active(), tot)
-                update_summary()
-            return upd
+        def update_row_summary(entry):
+            mins, engr, trav = compute_layer_minutes(entry)
+            hstr, _ = human_time(mins)
+            entry['summary_lbl'].set_text(hstr)
+            entry['summary_lbl'].set_tooltip_text(f"Engrave: {engr:.1f}mm\nTravel: {trav:.1f}mm")
 
-        def on_active(btn, i, widgets):
-            active = btn.get_active()
-            for w in widgets:
-                w.set_sensitive(active)
-            times[i] = (active, times[i][1])
-            update_summary()
-
-        last_point = (0.0, 0.0)  # Start from origin for first layer
-        for idx, layer in enumerate(layers, start=1):
+        # Build list rows and parameter editor widgets
+        last_point = (0.0, 0.0)
+        for idx, layer in enumerate(layers):
             name = get_layer_name(layer)
             p = int(layer.get('data-passes') or 1)
             s = int(layer.get('data-speed') or 0)
             pw = int(layer.get('data-power') or 0)
             act = layer.get('data-active') == 'true'
             eng, trv, last_point = layer_distance(layer, last_point)
-
-            # Convert distances to configured unit (from inkburn.ini)
-            eng  = svg.unit_to_viewport(eng, unit)
+            eng = svg.unit_to_viewport(eng, unit)
             trv = svg.unit_to_viewport(trv, unit)
 
-            lbl = Gtk.Label(label=name, xalign=0)
-            spin_p = Gtk.SpinButton(adjustment=Gtk.Adjustment(value=p, lower=1, upper=20, step_increment=1, page_increment=5, page_size=0), digits=0)
-            spin_s = Gtk.SpinButton(adjustment=Gtk.Adjustment(value=s, lower=100, upper=travel_speed, step_increment=100, page_increment=10, page_size=0), digits=0)
-            spin_pw = Gtk.SpinButton(adjustment=Gtk.Adjustment(value=pw, lower=0, upper=100, step_increment=1, page_increment=10, page_size=0), digits=0)
+            # Left row widgets
+            row = Gtk.ListBoxRow()
+            row_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8, margin=6)
             chk = Gtk.CheckButton()
             chk.set_active(act)
+            name_lbl = Gtk.Label(label=name, xalign=0)
+            summary = Gtk.Label(xalign=0)
+            row_box.pack_start(chk, False, False, 0)
+            row_box.pack_start(name_lbl, True, True, 0)
+            row_box.pack_start(summary, False, False, 0)
+            row.add(row_box)
+            listbox.add(row)
+
+            # Right-side parameter widgets (one set per layer, we'll show the selected one)
+            spin_p = Gtk.SpinButton(adjustment=Gtk.Adjustment(value=p, lower=1, upper=20, step_increment=1, page_increment=5, page_size=0), digits=0)
+            spin_s = Gtk.SpinButton(adjustment=Gtk.Adjustment(value=s, lower=1, upper=travel_speed, step_increment=10, page_increment=10, page_size=0), digits=0)
+            spin_pw = Gtk.SpinButton(adjustment=Gtk.Adjustment(value=pw, lower=0, upper=100, step_increment=1, page_increment=10, page_size=0), digits=0)
             lbl_time = Gtk.Label(xalign=0)
-            times.append((act, 0.0))
 
-            updater = make_updater(idx-1, spin_p, spin_s, chk, lbl_time, eng, trv)
-            spin_p.connect('value-changed', updater)
-            spin_s.connect('value-changed', updater)
-            updater()
-            for w in (lbl, spin_p, spin_s, spin_pw, lbl_time): w.set_sensitive(act)
-            chk.connect('toggled', on_active, idx-1, [lbl, spin_p, spin_s, spin_pw, lbl_time])
+            entry = {
+                'layer': layer,
+                'eng': eng,
+                'trv': trv,
+                'spin_p': spin_p,
+                'spin_s': spin_s,
+                'spin_pw': spin_pw,
+                'chk': chk,
+                'row': row,
+                'summary_lbl': summary,
+                'lbl_time': lbl_time,
+            }
+            entries.append(entry)
 
-            grid.attach(lbl,      0, idx, 1, 1)
-            grid.attach(spin_p,   1, idx, 1, 1)
-            grid.attach(spin_s,   2, idx, 1, 1)
-            grid.attach(spin_pw,  3, idx, 1, 1)
-            grid.attach(chk,      4, idx, 1, 1)
-            grid.attach(lbl_time, 5, idx, 1, 1)
-            entries.append((layer, spin_p, spin_s, spin_pw, chk))
+            # Connect changes to update summaries/global summary
+            def make_handlers(ent):
+                def on_change(*_):
+                    update_row_summary(ent)
+                    update_global_summary()
+                def on_active(tbtn, ent=ent):
+                    # nothing to do on toggle except update summaries and possibly selection sensitivity
+                    update_row_summary(ent)
+                    update_global_summary()
+                return on_change, on_active
 
-        vbox.pack_start(summary_lbl, False, False, 0)
+            chg, tog = make_handlers(entry)
+            spin_p.connect('value-changed', chg)
+            spin_s.connect('value-changed', chg)
+            spin_pw.connect('value-changed', chg)
+            chk.connect('toggled', tog)
 
+            # initialize summaries
+            update_row_summary(entry)
+
+        # Parameter editor contents (static controls, values will be set when row selected)
+        lbl_pass = Gtk.Label(label="Passes:", xalign=0)
+        lbl_speed = Gtk.Label(label="Speed (mm/min):", xalign=0)
+        lbl_power = Gtk.Label(label="Power (%):", xalign=0)
+        lbl_time_lab = Gtk.Label(label="Estimated time:", xalign=0)
+
+        editor_pass = Gtk.SpinButton(adjustment=Gtk.Adjustment(value=1, lower=1, upper=20, step_increment=1), digits=0)
+        editor_speed = Gtk.SpinButton(adjustment=Gtk.Adjustment(value=100, lower=1, upper=travel_speed, step_increment=10), digits=0)
+        editor_power = Gtk.SpinButton(adjustment=Gtk.Adjustment(value=0, lower=0, upper=100, step_increment=1), digits=0)
+        editor_active = Gtk.CheckButton(label="Active")
+        editor_time = Gtk.Label(xalign=0)
+
+        # Place editor controls in grid
+        right_box.attach(lbl_pass, 0, 0, 1, 1)
+        right_box.attach(editor_pass, 1, 0, 1, 1)
+        right_box.attach(lbl_speed, 0, 1, 1, 1)
+        right_box.attach(editor_speed, 1, 1, 1, 1)
+        right_box.attach(lbl_power, 0, 2, 1, 1)
+        right_box.attach(editor_power, 1, 2, 1, 1)
+        right_box.attach(editor_active, 0, 3, 2, 1)
+        right_box.attach(lbl_time_lab, 0, 4, 1, 1)
+        right_box.attach(editor_time, 1, 4, 1, 1)
+
+        # Save/Cancel buttons
         btns = Gtk.ButtonBox(spacing=10)
         ok = Gtk.Button(label="Update Parameters")
         cancel = Gtk.Button(label="Cancel")
         btns.pack_start(ok, False, False, 0)
         btns.pack_start(cancel, False, False, 0)
-        vbox.pack_start(btns, False, False, 0)
+
+        # Pack bottom widgets
+        bottom_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        bottom_box.pack_start(summary_lbl, True, True, 0)
+        bottom_box.pack_start(btns, False, False, 0)
+
+        root_box.pack_start(bottom_box, False, False, 0)
+
+        # Selection handling: when a row is selected, populate editor with that entry
+        def on_row_selected(lb, row):
+            if row is None:
+                # clear editor
+                editor_pass.set_value(1)
+                editor_speed.set_value(0)
+                editor_power.set_value(0)
+                editor_active.set_active(False)
+                editor_pass.set_sensitive(False)
+                editor_speed.set_sensitive(False)
+                editor_power.set_sensitive(False)
+                editor_active.set_sensitive(False)
+                editor_time.set_text("")
+                return
+            # find entry for row
+            ent = next((e for e in entries if e['row'] is row), None)
+            if ent is None:
+                return
+            editor_pass.set_sensitive(True)
+            editor_speed.set_sensitive(True)
+            editor_power.set_sensitive(True)
+            editor_active.set_sensitive(True)
+            editor_pass.set_value(ent['spin_p'].get_value())
+            editor_speed.set_value(ent['spin_s'].get_value())
+            editor_power.set_value(ent['spin_pw'].get_value())
+            editor_active.set_active(ent['chk'].get_active())
+            mins, engr, trav = compute_layer_minutes(ent)
+            editor_time.set_text(human_time(mins)[0])
+
+        listbox.connect('row-selected', on_row_selected)
+
+        # When editor values change, reflect them into the selected entry
+        def apply_editor_change(*_):
+            sel = listbox.get_selected_row()
+            if sel is None:
+                return
+            ent = next((e for e in entries if e['row'] is sel), None)
+            if ent is None:
+                return
+            ent['spin_p'].set_value(editor_pass.get_value())
+            ent['spin_s'].set_value(editor_speed.get_value())
+            ent['spin_pw'].set_value(editor_power.get_value())
+            ent['chk'].set_active(editor_active.get_active())
+            update_row_summary(ent)
+            update_global_summary()
+
+        editor_pass.connect('value-changed', apply_editor_change)
+        editor_speed.connect('value-changed', apply_editor_change)
+        editor_power.connect('value-changed', apply_editor_change)
+        editor_active.connect('toggled', apply_editor_change)
+
+        # Initialize selection to first row
+        if entries:
+            listbox.show_all()
+            listbox.select_row(entries[0]['row'])
+            update_global_summary()
 
         ok.connect('clicked', self.save_and_exit, entries)
         cancel.connect('clicked', lambda _: Gtk.main_quit())
 
-        window.add(vbox)
+        window.add(root_box)
         window.show_all()
         Gtk.main()
 
