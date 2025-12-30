@@ -301,10 +301,18 @@ class LayerDataDialog(inkex.EffectExtension):
 
     def save_and_exit(self, widget: Gtk.Button, entries: list[tuple]) -> None:
         """Save the layer parameters and exit the dialog."""
-        for layer, sp_p, sp_s, sp_pw, chk in entries:
-            layer.set('data-passes', str(int(sp_p.get_value())))
-            layer.set('data-speed', str(int(sp_s.get_value())))
-            layer.set('data-power', str(int(sp_pw.get_value())))
+        # entries is a list of dicts created in the new UI: update each layer from widgets
+        for ent in entries:
+            layer = ent.get('layer')
+            sp_p = ent.get('spin_p')
+            sp_s = ent.get('spin_s')
+            sp_pw = ent.get('spin_pw')
+            chk = ent.get('chk')
+            if layer is None:
+                continue
+            layer.set('data-passes', str(int(sp_p.get_value_as_int())))
+            layer.set('data-speed', str(int(sp_s.get_value_as_int())))
+            layer.set('data-power', str(int(sp_pw.get_value_as_int())))
             layer.set('data-active', 'true' if chk.get_active() else 'false')
         out = self.options.output  # This should be set by the extension framework
         etree.ElementTree(self.document.getroot()).write(out, xml_declaration=True,
