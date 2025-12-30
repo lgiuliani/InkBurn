@@ -24,6 +24,7 @@ from config_global import load_config, CONFIG_SECTION
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
+from gi.repository import Gdk
 
 # Defaults constants
 DEFAULT_MAX_TRAVEL_SPEED = 10000  # Maximum travel speed in mm/min
@@ -59,12 +60,19 @@ class LayerDataDialog(inkex.EffectExtension):
             inkex.errormsg("No layers found.")
             return
 
-        height = HEADER_HEIGHT + ROW_HEIGHT * (len(layers) + 1)
-        height = min(height, MAX_HEIGHT)
+        # Compute desired height to show all layers; cap to screen and MAX_HEIGHT
+        desired_height = HEADER_HEIGHT + ROW_HEIGHT * (len(layers) + 1)
+        screen = Gdk.Screen.get_default()
+        screen_height = screen.get_height() if screen is not None else MAX_HEIGHT
+        # leave some margin from screen edges
+        max_allowed = min(screen_height - 80, MAX_HEIGHT)
+        height = min(desired_height, max_allowed)
 
         window = Gtk.Window(title="Ink/Burn : Configure layers")
         window.connect("delete-event", Gtk.main_quit)
+        # Force width so both panes are visible; height is dynamic but fixed at creation
         window.set_default_size(DEFAULT_WIDTH, height)
+        window.set_resizable(False)
 
         root_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, margin=12)
 
@@ -75,6 +83,9 @@ class LayerDataDialog(inkex.EffectExtension):
         # Left: list of layers
         left_scrolled = Gtk.ScrolledWindow()
         left_scrolled.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        # Ensure left pane can scroll vertically when there are many layers
+        LEFT_PANE_WIDTH = 260
+        left_scrolled.set_size_request(LEFT_PANE_WIDTH, -1)
         listbox = Gtk.ListBox()
         listbox.set_selection_mode(Gtk.SelectionMode.SINGLE)
         left_scrolled.add(listbox)
@@ -82,6 +93,11 @@ class LayerDataDialog(inkex.EffectExtension):
         # Right: parameter editor for selected layer
         right_frame = Gtk.Frame(label="Layer parameters")
         right_box = Gtk.Grid(row_spacing=6, column_spacing=10, margin=8)
+        # Fix right pane width so its controls are always visible
+        RIGHT_PANE_WIDTH = DEFAULT_WIDTH - LEFT_PANE_WIDTH - 40
+        if RIGHT_PANE_WIDTH < 200:
+            RIGHT_PANE_WIDTH = 200
+        right_frame.set_size_request(RIGHT_PANE_WIDTH, -1)
         right_frame.add(right_box)
 
         hbox.add1(left_scrolled)
