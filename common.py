@@ -58,6 +58,11 @@ def get_sorted_elements(layer: etree) -> list:
         if elem.tag_name == 'g':
             continue
 
+        # skip image 
+        if elem.tag_name == 'image':
+             inkex.utils.debug(f"Skipping image element: {elem.tag_name} with id {elem.get('id', '')}")
+             continue
+
         # Skip elements without path representation
         if not hasattr(elem, 'path') : #or not callable(elem.path):
             inkex.utils.debug(f"Skipping unsupported element: {elem.tag_name} with id {elem.get('id', '')}")    
