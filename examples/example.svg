@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+  <defs/>
+  
+  <!-- Layer 1: Simple Cut Job -->
+  <g
+     inkscape:groupmode="layer"
+     id="layer1"
+     inkscape:label="Layer 1 - Cut Example"
+     data-job-0='{"id": "550e8400-e29b-41d4-a716-446655440001", "type": "cut", "active": true, "passes": 1, "speed": 800.0, "power_min": 0.0, "power_max": 600.0, "air_assist": true, "offset": 0.0, "laser_mode": "M3", "params": {}}'>
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:0.5"
+       id="rect1"
+       width="50"
+       height="50"
+       x="20"
+       y="20" />
+    <circle
+       style="fill:none;stroke:#000000;stroke-width:0.5"
+       id="circle1"
+       cx="100"
+       cy="45"
+       r="20" />
+  </g>
+
+  <!-- Layer 2: Multiple Jobs (Cut + Fill) -->
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Layer 2 - Cut and Fill"
+     data-job-0='{"id": "550e8400-e29b-41d4-a716-446655440002", "type": "cut", "active": true, "passes": 1, "speed": 1000.0, "power_min": 0.0, "power_max": 700.0, "air_assist": true, "offset": 0.0, "laser_mode": "M4", "params": {}}'
+     data-job-1='{"id": "550e8400-e29b-41d4-a716-446655440003", "type": "fill", "active": true, "passes": 1, "speed": 1200.0, "power_min": 0.0, "power_max": 500.0, "air_assist": true, "offset": 0.0, "laser_mode": "M4", "params": {"angle": 45.0, "spacing": 0.5, "alternate": true}}'>
+    <rect
+       style="fill:none;stroke:#ff0000;stroke-width:0.5"
+       id="rect2"
+       width="80"
+       height="60"
+       x="20"
+       y="100" />
+    <ellipse
+       style="fill:none;stroke:#ff0000;stroke-width:0.5"
+       id="ellipse1"
+       cx="140"
+       cy="130"
+       rx="25"
+       ry="15" />
+  </g>
+
+  <!-- Layer 3: Inactive Job Example -->
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="Layer 3 - With Inactive Job"
+     style="display:inline"
+     data-job-0='{"id": "550e8400-e29b-41d4-a716-446655440004", "type": "cut", "active": true, "passes": 2, "speed": 600.0, "power_min": 0.0, "power_max": 800.0, "air_assist": true, "offset": 0.1, "laser_mode": "M3", "params": {}}'
+     data-job-1='{"id": "550e8400-e29b-41d4-a716-446655440005", "type": "fill", "active": false, "passes": 1, "speed": 1000.0, "power_min": 0.0, "power_max": 400.0, "air_assist": false, "offset": 0.0, "laser_mode": "M4", "params": {"angle": 90.0, "spacing": 0.3, "alternate": false}}'>
+    <path
+       style="fill:none;stroke:#0000ff;stroke-width:0.5"
+       d="M 20,200 L 50,170 L 80,200 L 50,230 Z"
+       id="path1" />
+  </g>
+
+  <!-- Layer 4: Hidden Layer (should be skipped in export) -->
+  <g
+     inkscape:groupmode="layer"
+     id="layer4"
+     inkscape:label="Layer 4 - Hidden"
+     style="display:none"
+     data-job-0='{"id": "550e8400-e29b-41d4-a716-446655440006", "type": "cut", "active": true, "passes": 1, "speed": 800.0, "power_min": 0.0, "power_max": 600.0, "air_assist": true, "offset": 0.0, "laser_mode": "M3", "params": {}}'>
+    <rect
+       style="fill:none;stroke:#00ff00;stroke-width:0.5"
+       id="rect3"
+       width="30"
+       height="30"
+       x="120"
+       y="200" />
+  </g>
+</svg>

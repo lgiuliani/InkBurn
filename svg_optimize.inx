@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
+  <name>SVG Optimization</name>
+  <id>org.inkburn.svg_optimize</id>
+  <effect implements-custom-gui="true" show-stderr="true">
+    <effects-menu>
+      <submenu name="Ink/Burn" translatable="no"/>
+    </effects-menu>
+  </effect>
+  <script>
+    <command location="inx" interpreter="python">svg_optimize.py</command>
+  </script>
+</inkscape-extension>

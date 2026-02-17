@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
-  <name>Configure layers</name>
-  <id>org.laurent.config_layers</id>
+  <name>Layer &amp; Job Configuration</name>
+  <id>org.inkburn.config_layers</id>
   <effect implements-custom-gui="true" show-stderr="true">
     <effects-menu>
       <submenu name="Ink/Burn" translatable="no"/>

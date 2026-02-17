@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- GTK3 Builder UI file for Layer Configuration (vertical split: layers top / params bottom) -->
+<interface>
+  <requires lib="gtk+" version="3.0"/>
+
+  <object class="GtkWindow" id="main_window">
+    <property name="title">InkBurn - Layer Configuration</property>
+    <property name="default_width">900</property>
+    <property name="default_height">650</property>
+
+    <child>
+      <object class="GtkBox" id="main_box">
+        <property name="orientation">vertical</property>
+        <property name="spacing">8</property>
+        <property name="margin-top">12</property>
+        <property name="margin-bottom">12</property>
+        <property name="margin-start">12</property>
+        <property name="margin-end">12</property>
+
+        <!-- Title -->
+        <child>
+          <object class="GtkLabel">
+            <property name="use_markup">True</property>
+            <property name="label">&lt;b&gt;Configure laser parameters for each layer&lt;/b&gt;</property>
+            <property name="halign">start</property>
+          </object>
+        </child>
+
+        <!-- TOP: layer list -->
+        <child>
+          <object class="GtkFrame">
+            <property name="label">Layers</property>
+            <property name="vexpand">True</property>
+            <property name="margin-bottom">6</property>
+
+            <child>
+              <object class="GtkScrolledWindow">
+                <property name="vexpand">True</property>
+                <child>
+                  <object class="GtkTreeView" id="layer_treeview"/>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+
+        <!-- BOTTOM: parameters -->
+        <child>
+          <object class="GtkFrame">
+            <property name="label">Layer Parameters</property>
+            <property name="vexpand">True</property>
+            <property name="margin-top">6</property>
+
+            <child>
+              <object class="GtkBox" id="param_area">
+                <property name="orientation">vertical</property>
+                <property name="spacing">6</property>
+
+                <!-- Action + Laser mode -->
+                <child>
+                  <object class="GtkBox">
+                    <property name="orientation">horizontal</property>
+                    <property name="spacing">8</property>
+
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="label">Action Type:</property>
+                        <property name="halign">start</property>
+                      </object>
+                    </child>
+
+                    <child>
+                      <object class="GtkComboBoxText" id="action_combo"/>
+                    </child>
+
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="label">Laser Mode:</property>
+                        <property name="halign">start</property>
+                      </object>
+                    </child>
+
+                    <child>
+                      <object class="GtkComboBoxText" id="laser_mode_combo"/>
+                    </child>
+                  </object>
+                </child>
+
+                <!-- Parameters stack -->
+                <child>
+                  <object class="GtkScrolledWindow">
+                    <property name="vexpand">True</property>
+                    <child>
+                      <object class="GtkStack" id="param_stack"/>
+                    </child>
+                  </object>
+                </child>
+
+                <!-- Buttons -->
+                <child>
+                  <object class="GtkBox">
+                    <property name="orientation">horizontal</property>
+                    <property name="spacing">8</property>
+                    <property name="halign">end</property>
+
+                    <child>
+                      <object class="GtkButton" id="btn_apply_all">
+                        <property name="label">Apply to All Layers</property>
+                      </object>
+                    </child>
+
+                    <child>
+                      <object class="GtkButton" id="btn_save">
+                        <property name="label">Save &amp; Close</property>
+                      </object>
+                    </child>
+
+                    <child>
+                      <object class="GtkButton" id="btn_close">
+                        <property name="label">Close</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+
+              </object>
+            </child>
+          </object>
+        </child>
+
+      </object>
+    </child>
+  </object>
+</interface>
