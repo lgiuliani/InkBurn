@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
-  <name>Layer &amp; Job Configuration</name>
+  <name>Configure Layer &amp; Job</name>
   <id>org.inkburn.config_layers</id>
   <effect implements-custom-gui="true" show-stderr="true">
     <effects-menu>

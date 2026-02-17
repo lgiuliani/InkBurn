@@ -26,20 +26,8 @@ Reference G-code output generated from `example.svg`, demonstrating:
 ## Usage
 
 1. Open `example.svg` in Inkscape
-2. Go to `Extensions > Ink/Burn > Layer & Job Configuration`
+2. Go to `Extensions > Ink/Burn > Configure Layer & Job`
 3. View the configured jobs for each layer
 4. Export via `Extensions > Ink/Burn > Export G-code`
 5. Compare output with `expected_output.nc`
 
-## Testing Migration
-
-If you have SVG files from the old InkBurn version with `data-inkburn-*` attributes:
-
-```bash
-python migrate_legacy.py old_file.svg new_file.svg
-```
-
-This converts:
-- `data-active` → job `active` field
-- `data-inkburn-action` → job `type` (contour→cut, fill→fill, raster→raster)
-- `data-inkburn-params` → job parameters + type-specific `params`

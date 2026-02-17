@@ -73,7 +73,7 @@
 Set your laser's maximum power, speed, and other global parameters. These settings apply to all documents and provide safety limits.
 
 ### 2. Configure Layer Jobs
-`Extensions > Ink/Burn > Layer & Job Configuration`
+`Extensions > Ink/Burn > Configure Layer & Job`
 
 - **Select a layer** from the left panel
 - **Add jobs** using the "+" button — choose cut, fill, or raster
@@ -98,7 +98,7 @@ Reorders shapes within each layer using nearest-neighbor to minimize travel dist
    - **Layer 1**: Rectangle (for fill hatching and cut outline)
    - **Layer 2**: Image (for raster engraving)
 
-2. Open **Layer & Job Configuration**:
+2. Open **Configure Layer & Job**:
    - Layer 1: Add **Fill** job (1200mm/min, 500 power, 45° angle, 0.5mm spacing)
               Add **Cut** job (800mm/min, 600 power, 1 pass)
    - Layer 2: Add **Raster** job (800mm/min, 0-600 power, 300 DPI)
