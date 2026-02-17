@@ -1,6 +1,6 @@
-# InkBurn
+# Ink/Burn
 
-**InkBurn** is a powerful Inkscape extension for laser cutting and engraving. It converts SVG designs into GRBL 1.1 compatible G-code files (.nc) for use with laser controllers and software like LaserGRBL, bCNC, and UGS.
+**Ink/Burn** is a powerful Inkscape extension for laser cutting and engraving. It converts SVG designs into GRBL 1.1 compatible G-code files (.nc) for use with laser controllers and software like LaserGRBL.
 
 ## ✨ Features
 
@@ -95,14 +95,13 @@ Reorders shapes within each layer using nearest-neighbor to minimize travel dist
 ## 📖 Example Workflow
 
 1. Create an SVG with multiple layers:
-   - **Layer 1**: Rectangle (for cut outline)
-   - **Layer 2**: Same rectangle (for fill hatching)
-   - **Layer 3**: Image (for raster engraving)
+   - **Layer 1**: Rectangle (for fill hatching and cut outline)
+   - **Layer 2**: Image (for raster engraving)
 
 2. Open **Layer & Job Configuration**:
-   - Layer 1: Add **Cut** job (800mm/min, 600 power, 1 pass)
-   - Layer 2: Add **Fill** job (1200mm/min, 500 power, 45° angle, 0.5mm spacing)
-   - Layer 3: Add **Raster** job (800mm/min, 0-600 power, 300 DPI)
+   - Layer 1: Add **Fill** job (1200mm/min, 500 power, 45° angle, 0.5mm spacing)
+              Add **Cut** job (800mm/min, 600 power, 1 pass)
+   - Layer 2: Add **Raster** job (800mm/min, 0-600 power, 300 DPI)
 
 3. **Export G-code** → `your_file.nc`
 
@@ -110,15 +109,6 @@ Reorders shapes within each layer using nearest-neighbor to minimize travel dist
 
 See `examples/example.svg` for a complete demo with expected output.
 
-## 🔄 Migrating Old Files
-
-If you have SVG files from a previous InkBurn version with `data-inkburn-*` attributes:
-
-```bash
-python migrate_legacy.py old_file.svg new_file.svg
-```
-
-This converts old format to new `data-job-X` JSON attributes.
 
 ## 🧪 Testing
 
@@ -155,11 +145,11 @@ Contributions are welcome! Please open issues or pull requests on the [GitHub re
 
 ## 📄 License
 
-InkBurn is licensed under the **GPL V3 License**. See [LICENSE](LICENSE) for details.
+Ink/Burn is licensed under the **GPL V3 License**. See [LICENSE](LICENSE) for details.
 
 ## 🙏 Acknowledgments
 
-InkBurn is inspired by **Ink/Stitch**, the popular Inkscape embroidery extension.
+Ink/Burn is inspired by **Ink/Stitch**, the popular Inkscape embroidery extension.
 
 ## 📧 Contact
 
@@ -167,5 +157,5 @@ For questions or support: [l_giuliani@hotmail.com](mailto:l_giuliani@hotmail.com
 
 ---
 
-**Version**: 1.0  
+**Version**: 1.5  
 **Last Updated**: 2026-02-17
