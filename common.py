@@ -101,11 +101,10 @@ def get_image_elements(layer: etree._Element) -> List[etree._Element]:
     Returns:
         List of ``<image>`` elements.
     """
-    images: List[etree._Element] = []
-    for elem in layer.xpath(".//svg:image", namespaces=NS):
-        if is_visible(elem):
-            images.append(elem)
-    return images
+    return [
+        elem for elem in layer.xpath(".//svg:image", namespaces=NS)
+        if is_visible(elem)
+    ]
 
 
 def layer_distance(
