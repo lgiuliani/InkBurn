@@ -187,7 +187,6 @@ class GCodeGenerator:
         self,
         segments: List[PathSegment],
         job: Job,
-        layer_label: str,
         job_index: int,
     ) -> None:
         """Add all segments for a single job, with multiple passes.
@@ -195,7 +194,6 @@ class GCodeGenerator:
         Args:
             segments: Path segments to process.
             job: Job configuration.
-            layer_label: Parent layer name for comments.
             job_index: Zero-based job index for comments.
         """
         if not job.active:
@@ -234,7 +232,7 @@ class GCodeGenerator:
         self._commands.append(f"; Layer: {layer.label}")
 
         for idx, job in enumerate(active_jobs):
-            self.add_job(segments, job, layer.label, idx)
+            self.add_job(segments, job, idx)
 
     # ------------------------------------------------------------------
     # Output

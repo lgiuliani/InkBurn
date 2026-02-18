@@ -173,7 +173,7 @@ class ExportGCode(inkex.OutputExtension):
 
         segments = self._optimize_segments(segments, layer.label, total_metrics)
         self._generator._commands.append(f"; Layer: {layer.label}")
-        self._generator.add_job(segments, job, layer.label, job_index)
+        self._generator.add_job(segments, job, job_index)
 
     def _process_fill_job(
         self,
@@ -220,7 +220,7 @@ class ExportGCode(inkex.OutputExtension):
             hatch_segments, layer.label, total_metrics
         )
         self._generator._commands.append(f"; Layer: {layer.label}")
-        self._generator.add_job(hatch_segments, job, layer.label, job_index)
+        self._generator.add_job(hatch_segments, job, job_index)
 
     def _process_raster_job(
         self,
