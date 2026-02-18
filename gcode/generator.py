@@ -10,7 +10,7 @@ from typing import List, Optional
 
 from inkex.transforms import Vector2d
 
-from constants import COORD_PRECISION
+from constants import COORD_PRECISION, TRAVEL_SPEED
 from models.job import Job, JobType
 from models.layer import Layer
 from models.machine import MachineSettings
@@ -60,6 +60,7 @@ class GCodeGenerator:
             f"; Date: {now}",
             "G21",
             "G90",
+            f"G0 F{TRAVEL_SPEED}",
         ])
 
     def add_footer(self) -> None:
@@ -67,6 +68,7 @@ class GCodeGenerator:
         self._commands.extend([
             "M5",
             "G0 X0 Y0",
+            "M2",
         ])
 
     # ------------------------------------------------------------------
