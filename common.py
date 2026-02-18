@@ -24,7 +24,8 @@ def list_layers(svg: etree._Element) -> List[etree._Element]:
         svg: Root ``<svg>`` element.
 
     Returns:
-        Layers in SVG file order (top-to-bottom in the XML tree).
+        Layers in bottom-to-top visual order
+        (i.e., reversed XML document order).
     """
     layers = svg.xpath(
         '//svg:g[@inkscape:groupmode="layer"]', namespaces=NS
