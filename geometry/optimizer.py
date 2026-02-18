@@ -137,3 +137,4 @@ class PathOptimizer:
         for i in range(len(segments) - 1):
             total += distance(segments[i].end_point, segments[i + 1].start_point)
         return total
+        
