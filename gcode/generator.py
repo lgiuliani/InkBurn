@@ -142,6 +142,14 @@ class GCodeGenerator:
     # Segment / Job / Layer
     # ------------------------------------------------------------------
 
+    def add_comment(self, text: str) -> None:
+        """Append a G-code comment line.
+
+        Args:
+            text: Comment text (without leading semicolon).
+        """
+        self._commands.append(f"; {text}")
+
     def add_shape_comment(self, segment: PathSegment) -> None:
         """Add a shape identifier comment when the element changes.
 
@@ -149,8 +157,8 @@ class GCodeGenerator:
             segment: Current path segment.
         """
         if segment.element_id != self._last_element_id:
-            comment = f"; Shape: {segment.element_type}#{segment.element_id}"
-            self._commands.append(comment[:80])
+            comment = f"Shape: {segment.element_type}#{segment.element_id}"
+            self.add_comment(comment[:80])
             self._last_element_id = segment.element_id
 
     def add_segment(self, segment: PathSegment, job: Job) -> None:

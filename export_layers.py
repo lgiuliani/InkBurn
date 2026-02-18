@@ -172,7 +172,7 @@ class ExportGCode(inkex.OutputExtension):
             return
 
         segments = self._optimize_segments(segments, layer.label, total_metrics)
-        self._generator._commands.append(f"; Layer: {layer.label}")
+        self._generator.add_comment(f"Layer: {layer.label}")
         self._generator.add_job(segments, job, job_index)
 
     def _process_fill_job(
@@ -219,7 +219,7 @@ class ExportGCode(inkex.OutputExtension):
         hatch_segments = self._optimize_segments(
             hatch_segments, layer.label, total_metrics
         )
-        self._generator._commands.append(f"; Layer: {layer.label}")
+        self._generator.add_comment(f"Layer: {layer.label}")
         self._generator.add_job(hatch_segments, job, job_index)
 
     def _process_raster_job(
@@ -250,9 +250,9 @@ class ExportGCode(inkex.OutputExtension):
         direction = str(job.params.get("direction", "horizontal"))
         processor = RasterProcessor(dpi=dpi, direction=direction)
 
-        self._generator._commands.append(f"; Layer: {layer.label}")
-        self._generator._commands.append(
-            f"; Job: {job.type.value} {job_index} (id={job.id})"
+        self._generator.add_comment(f"Layer: {layer.label}")
+        self._generator.add_comment(
+            f"Job: {job.type.value} {job_index} (id={job.id})"
         )
 
         for img_elem in images:
