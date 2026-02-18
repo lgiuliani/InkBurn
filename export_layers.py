@@ -21,7 +21,7 @@ from geometry.hatching import generate_hatch_lines
 from geometry.optimizer import PathOptimizer
 from models.job import Job, JobType
 from models.layer import Layer
-from models.path import OptimizationMetrics, PathSegment
+from models.path import OptimizationMetrics, PathSegment, PathType
 from persistence.preferences import load_machine_settings
 from persistence.svg_io import load_layers
 from raster.processor import RasterProcessor
@@ -204,7 +204,7 @@ class ExportGCode(inkex.OutputExtension):
 
         hatch_segments: List[PathSegment] = []
         for seg in segments:
-            if seg.path_type.value == "closed" and len(seg.points) >= 3:
+            if seg.path_type is PathType.CLOSED and len(seg.points) >= 3:
                 hatches = generate_hatch_lines(
                     seg.points, angle=angle, spacing=spacing, alternate=alternate
                 )
