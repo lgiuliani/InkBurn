@@ -215,25 +215,6 @@ class GCodeGenerator:
             for segment in segments:
                 self.add_segment(segment, job)
 
-    def add_layer(self, layer: Layer, segments: List[PathSegment]) -> None:
-        """Add all active jobs for a layer.
-
-        Args:
-            layer: Layer model.
-            segments: Path segments extracted from this layer.
-        """
-        if not layer.visible:
-            return
-
-        active_jobs = layer.active_jobs()
-        if not active_jobs:
-            return
-
-        self._commands.append(f"; Layer: {layer.label}")
-
-        for idx, job in enumerate(active_jobs):
-            self.add_job(segments, job, idx)
-
     # ------------------------------------------------------------------
     # Output
     # ------------------------------------------------------------------

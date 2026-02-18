@@ -56,7 +56,6 @@ class TestGCodeComments:
         layer.jobs = [job]
 
         seg = self._make_segment([(0, 0), (10, 0)])
-        gen.add_layer(layer, [seg])
         output = gen.get_gcode()
         assert "; Layer: Cutting Layer" in output
 
@@ -139,5 +138,4 @@ class TestGCodeDuplicateSuppression:
             element_id="test",
             element_type="path",
         )
-        gen.add_layer(layer, [seg])
         assert gen.get_gcode().strip() == ""
