@@ -100,7 +100,7 @@ class RasterProcessor:
 
         return self._generate_scanlines(
             pixels, cols, rows, mm_per_dot,
-            x_offset, y_offset, img_width, img_height,
+            x_offset, y_offset,
             viewbox_height, transform, job,
         )
 
@@ -149,8 +149,6 @@ class RasterProcessor:
         mm_per_dot: float,
         x_offset: float,
         y_offset: float,
-        img_width: float,
-        img_height: float,
         viewbox_height: float,
         transform: Transform,
         job: Job,
