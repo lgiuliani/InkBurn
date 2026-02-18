@@ -11,6 +11,7 @@ from typing import Dict, List, Tuple
 from lxml import etree
 
 from constants import INKSCAPE_NS
+from common import is_visible
 from models.job import Job
 from models.layer import Layer
 
@@ -43,19 +44,6 @@ def _get_layer_label(elem: etree._Element) -> str:
     return elem.get(f"{{{INKSCAPE_NS}}}label") or elem.get("id") or "Unnamed"
 
 
-def _is_visible(elem: etree._Element) -> bool:
-    """Check whether an element is visible.
-
-    Args:
-        elem: SVG element.
-
-    Returns:
-        False if ``display:none`` is present in the element's style.
-    """
-    style = (elem.get("style") or "").replace(" ", "").lower()
-    return "display:none" not in style
-
-
 def load_layers(
     svg_root: etree._Element,
 ) -> Tuple[List[Layer], Dict[str, etree._Element]]:
@@ -77,7 +65,7 @@ def load_layers(
             continue
         layer_id = elem.get("id", "")
         label = _get_layer_label(elem)
-        visible = _is_visible(elem)
+        visible = is_visible(elem)
         attrs = dict(elem.attrib)
 
         layer = Layer.from_svg_attributes(layer_id, label, visible, attrs)
