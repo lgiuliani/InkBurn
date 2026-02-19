@@ -59,8 +59,7 @@ class GCodeGenerator:
             f"; Document: {document_name}",
             f"; Date: {now}",
             "G21",
-            "G90",
-            f"G0 F{TRAVEL_SPEED}",
+            "G90",",
         ])
 
     def add_footer(self) -> None:
