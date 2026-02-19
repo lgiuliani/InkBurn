@@ -263,9 +263,7 @@ class ExportGCode(inkex.OutputExtension):
             for segment, power_list in scanlines:
                 self._generator.add_shape_comment(segment)
                 self._generator.move_to(segment.start_point, is_cutting=False)
-                self._generator._commands.append(
-                    f"{job.laser_mode.value} S{power_list[0]}"
-                )
+                self._generator.enable_laser(job.laser_mode.value, power_list[0])
                 
                 # Emit G1 with per-pixel S values
                 for i, point in enumerate(segment.points[1:], start=1):
