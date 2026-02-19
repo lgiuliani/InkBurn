@@ -47,13 +47,13 @@ def load_machine_settings(path: Optional[str] = None) -> MachineSettings:
 
     cfg = cp[_CONFIG_SECTION]
     return MachineSettings(
-        max_power=int(cfg.get("max_power", "1000")),
-        max_speed=int(cfg.get("max_speed", "6000")),
-        travel_speed=int(cfg.get("travel_speed", "4000")),
-        resolution=float(cfg.get("resolution", "0.1")),
-        kerf_width=float(cfg.get("kerf_width", "0.0")),
-        laser_mode==cfg.getboolean("laser_mode", fallback=True),
-        debug_level=DebugLevel(cfg.get("debug_level", "off")),
+        max_power=cfg.getint("max_power", fallback=1000),
+        max_speed=cfg.getint("max_speed", fallback=6000),
+        travel_speed=cfg.getint("travel_speed", fallback=4000),
+        resolution=cfg.getfloat("resolution", fallback=0.1),
+        kerf_width=cfg.getfloat("kerf_width", fallback=0.0),
+        laser_mode=cfg.getboolean("laser_mode", fallback=True),
+        debug_level=DebugLevel(cfg.get("debug_level", fallback="off")),
         path_optimization=cfg.getboolean("path_optimization", fallback=True),
         direction_optimization=cfg.getboolean("direction_optimization", fallback=True),
         autolaunch=cfg.getboolean("autolaunch", fallback=False),
