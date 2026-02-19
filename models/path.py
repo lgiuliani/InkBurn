@@ -67,9 +67,9 @@ class PathSegment:
             if len(self.points) < 2:
                 self._length = 0.0
             else:
-            self._length = sum(
-                distance(a, b) for a, b in zip(self.points, self.points[1:])
-            )
+                self._length = sum(
+                    distance(a, b) for a, b in zip(self.points, self.points[1:])
+                )
         return self._length
 
     def reverse(self) -> "PathSegment":
