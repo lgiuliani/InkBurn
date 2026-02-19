@@ -272,7 +272,7 @@ class ExportGCode(inkex.OutputExtension):
                         point, is_cutting=True, speed=speed, power=power
                     )
                 
-                self._generator._commands.append("M5")
+                self._generator.disable_laser()
 
     # ------------------------------------------------------------------
     # Helpers
