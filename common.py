@@ -8,7 +8,6 @@ import logging
 import math
 from typing import List, Tuple
 
-from inkex.paths import CubicSuperPath
 from inkex.transforms import Transform
 from lxml import etree
 
