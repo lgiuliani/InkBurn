@@ -52,11 +52,11 @@ def load_machine_settings(path: Optional[str] = None) -> MachineSettings:
         travel_speed=int(cfg.get("travel_speed", "4000")),
         resolution=float(cfg.get("resolution", "0.1")),
         kerf_width=float(cfg.get("kerf_width", "0.0")),
-        laser_mode=cfg.get("laser_mode", "true").lower() == "true",
+        laser_mode==cfg.getboolean("laser_mode", fallback=True),
         debug_level=DebugLevel(cfg.get("debug_level", "off")),
-        path_optimization=cfg.get("path_optimization", "true").lower() == "true",
-        direction_optimization=cfg.get("direction_optimization", "true").lower() == "true",
-        autolaunch=cfg.get("autolaunch", "false").lower() == "true",
+        path_optimization=cfg.getboolean("path_optimization", fallback=True),
+        direction_optimization=cfg.getboolean("direction_optimization", fallback=True),
+        autolaunch=cfg.getboolean("autolaunch", fallback=False),
     )
 
 
