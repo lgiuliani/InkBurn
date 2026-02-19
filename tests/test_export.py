@@ -51,11 +51,7 @@ class TestGCodeComments:
     def test_layer_comment(self) -> None:
         """Layer processing adds layer comment."""
         gen = GCodeGenerator()
-        layer = Layer(layer_id="L1", label="Cutting Layer")
-        job = Job.create_default(JobType.CUT)
-        layer.jobs = [job]
-
-        seg = self._make_segment([(0, 0), (10, 0)])
+        gen.add_comment("Layer: Cutting Layer")
         output = gen.get_gcode()
         assert "; Layer: Cutting Layer" in output
 
@@ -64,7 +60,7 @@ class TestGCodeComments:
         gen = GCodeGenerator()
         job = Job.create_default(JobType.CUT)
         seg = self._make_segment([(0, 0), (10, 0)])
-        gen.add_job([seg], job, "Test", 0)
+        gen.add_job([seg], job, 0)
         output = gen.get_gcode()
         assert "; Job: cut 0" in output
         assert f"id={job.id}" in output
