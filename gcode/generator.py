@@ -137,10 +137,19 @@ class GCodeGenerator:
         if parts:
             self._commands.append(" ".join(parts))
 
+    def enable_laser(self, mode: str, power: int) -> None:
+        """Enable laser mode and associated power 
+
+        Args:
+            mode: GRBL laser enable command.
+            power: Laser power S value.
+        """"
+        self._commands.append(f"{mode} S{power}")
+        self._state.power = power
+
     # ------------------------------------------------------------------
     # Segment / Job / Layer
-    # ------------------------------------------------------------------
-
+    # ------------------------------------------------------------------       
     def add_comment(self, text: str) -> None:
         """Append a G-code comment line.
 
