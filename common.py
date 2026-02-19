@@ -7,6 +7,7 @@ used by both the export pipeline and UI components.
 import logging
 import math
 from typing import List, Tuple
+from itertools import chain
 
 from inkex.transforms import Transform
 from lxml import etree
