@@ -191,20 +191,13 @@ class GCodeGenerator:
         speed = self.settings.clamp_speed(job.speed)
         power = self.settings.clamp_power(job.power_max)
 
-        # Travel to start
         self.move_to(segment.start_point, is_cutting=False)
+        self.enable_laser(job.laser_mode.value, power)
 
-        # Enable laser
-        self._commands.append(f"{job.laser_mode.value} S{power}")
-        self._state.power = power
-
-        # Cut along path
         for point in segment.points[1:]:
             self.move_to(point, is_cutting=True, speed=speed, power=power)
 
-        # Disable laser after segment
-        self._commands.append("M5")
-        self._state.power = None
+        self.disable_laser()
 
     def add_job(
         self,
