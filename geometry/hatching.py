@@ -131,11 +131,7 @@ def _build_edges(
     Returns:
         List of (start, end) edge tuples.
     """
-    edges = []
-    n = len(polygon)
-    for i in range(n):
-        edges.append((polygon[i], polygon[(i + 1) % n]))
-    return edges
+    return list(zip(polygon, polygon[1:] + polygon[:1]))
 
 
 def _scanline_intersections(
