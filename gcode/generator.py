@@ -134,16 +134,25 @@ class GCodeGenerator:
 
         if parts:
             self._commands.append(" ".join(parts))
+            
+    # ------------------------------------------------------------------
+    # Laser control
+    # ------------------------------------------------------------------
 
     def enable_laser(self, mode: str, power: int) -> None:
         """Enable laser mode and associated power 
 
         Args:
-            mode: GRBL laser enable command.
-            power: Laser power S value.
+            mode: GRBL laser command string (``"M3"`` or ``"M4"``).
+            power: Initial S value to set on laser enable.
         """
         self._commands.append(f"{mode} S{power}")
         self._state.power = power
+
+    def disable_laser(self) -> None:
+        """Emit M5 (laser off) and clear tracked power state."""
+        self._commands.append("M5")
+        self._state.power = None
 
     # ------------------------------------------------------------------
     # Segment / Job / Layer
