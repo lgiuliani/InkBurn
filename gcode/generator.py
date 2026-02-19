@@ -143,7 +143,7 @@ class GCodeGenerator:
         Args:
             mode: GRBL laser enable command.
             power: Laser power S value.
-        """"
+        """
         self._commands.append(f"{mode} S{power}")
         self._state.power = power
 
