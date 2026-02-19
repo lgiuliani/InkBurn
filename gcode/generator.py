@@ -84,9 +84,7 @@ class GCodeGenerator:
         Returns:
             Formatted axis+value string (e.g. ``X12.34``).
         """
-        formatted = f"{value:.{COORD_PRECISION}f}"
-        formatted = formatted.rstrip("0").rstrip(".")
-        return f"{axis}{formatted}"
+        return f"{axis}{value:.{COORD_PRECISION}f}".rstrip("0").rstrip(".")
 
     def move_to(
         self,
