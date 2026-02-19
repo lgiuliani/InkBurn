@@ -59,7 +59,7 @@ class GCodeGenerator:
             f"; Document: {document_name}",
             f"; Date: {now}",
             "G21",
-            "G90",",
+            "G90",
         ])
 
     def add_footer(self) -> None:
