@@ -83,7 +83,10 @@ def save_machine_settings(
         "direction_optimization": str(settings.direction_optimization).lower(),
         "autolaunch": str(settings.autolaunch).lower(),
     }
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    parent = os.path.dirname(path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+        
     with open(path, "w", encoding="utf-8") as f:
         cp.write(f)
     logger.debug("Machine settings saved to %s", path)
