@@ -1,3 +1,4 @@
+#!raster/processor.py
 """Raster image processing for InkBurn extension.
 
 Converts embedded SVG ``<image>`` elements to scan-line G-code by:
@@ -11,7 +12,6 @@ Converts embedded SVG ``<image>`` elements to scan-line G-code by:
 import base64
 import io
 import logging
-import math
 from typing import List, Optional, Tuple
 
 from inkex.transforms import Transform, Vector2d
@@ -32,20 +32,17 @@ except ImportError:  # pragma: no cover
 class RasterProcessor:
     """Processes ``<image>`` SVG elements into scan-line path segments.
 
-    Each scan line contains per-pixel power values derived from the
-    image grayscale.  The caller (G-code generator) is responsible for
-    emitting the appropriate S values.
+    Each scan line contains per-pixel power values derived from the image
+    grayscale.  The caller (G-code generator) is responsible for emitting
+    the appropriate S values and must clamp them through MachineSettings
+    before passing to the generator.
 
     Attributes:
         dpi: Output resolution in dots per inch.
         direction: Scan direction — ``"horizontal"`` or ``"vertical"``.
     """
 
-    def __init__(
-        self,
-        dpi: int = 300,
-        direction: str = "horizontal",
-    ) -> None:
+    def __init__(self, dpi: int = 300, direction: str = "horizontal") -> None:
         """Initialize raster processor.
 
         Args:
@@ -66,12 +63,12 @@ class RasterProcessor:
         Args:
             element: SVG ``<image>`` element.
             viewbox_height: SVG viewbox height for Y-axis flip.
-            job: Job supplying power_min / power_max.
+            job: Job supplying ``power_min`` / ``power_max``.
 
         Returns:
-            List of (PathSegment, power_list) tuples. Each segment is a
-            single scan line; power_list contains per-pixel S values
-            corresponding to each point in the segment.
+            List of ``(PathSegment, power_list)`` tuples.  Each segment
+            is one scan line; the corresponding ``power_list`` holds one
+            integer S value per point.
         """
         if Image is None:
             logger.error("Pillow not installed — cannot process raster job")
@@ -81,7 +78,6 @@ class RasterProcessor:
         if img is None:
             return []
 
-        # Image placement in SVG coordinates
         x_offset = float(element.get("x", "0"))
         y_offset = float(element.get("y", "0"))
         img_width = float(element.get("width", str(img.width)))
@@ -89,19 +85,24 @@ class RasterProcessor:
 
         transform = Transform(element.composed_transform())
 
-        # Calculate pixel pitch
         mm_per_dot = 25.4 / self.dpi
         cols = max(1, int(img_width / mm_per_dot))
         rows = max(1, int(img_height / mm_per_dot))
 
-        # Resample to target resolution
         gray = img.convert("L").resize((cols, rows), Image.LANCZOS)
         pixels = gray.load()
 
-        return self._generate_scanlines(
-            pixels, cols, rows, mm_per_dot,
-            x_offset, y_offset,
-            viewbox_height, transform, job,
+        return self._scan_lines(
+            pixels=pixels,
+            cols=cols,
+            rows=rows,
+            mm_per_dot=mm_per_dot,
+            x_offset=x_offset,
+            y_offset=y_offset,
+            viewbox_height=viewbox_height,
+            transform=transform,
+            power_min=job.power_min,
+            power_range=job.power_max - job.power_min,
         )
 
     # ------------------------------------------------------------------
@@ -110,14 +111,14 @@ class RasterProcessor:
 
     def _decode_image(
         self, element: etree._Element
-    ) -> Optional["Image.Image"]:
+    ) -> "Optional[Image.Image]":
         """Decode an ``<image>`` element's href to a PIL Image.
 
         Args:
             element: SVG ``<image>`` element.
 
         Returns:
-            PIL Image or None on failure.
+            PIL Image instance, or ``None`` on failure.
         """
         href = (
             element.get("{http://www.w3.org/1999/xlink}href")
@@ -125,15 +126,13 @@ class RasterProcessor:
             or ""
         )
         if href.startswith("data:"):
-            # Base-64 encoded inline image
             try:
-                header, data = href.split(",", 1)
-                raw = base64.b64decode(data)
-                return Image.open(io.BytesIO(raw))
+                _header, data = href.split(",", 1)
+                return Image.open(io.BytesIO(base64.b64decode(data)))
             except Exception:
                 logger.error("Failed to decode inline image data")
                 return None
-        elif href:
+        if href:
             try:
                 return Image.open(href)
             except Exception:
@@ -141,73 +140,24 @@ class RasterProcessor:
                 return None
         return None
 
-    def _generate_scanlines(
-        self,
-        pixels: object,
-        cols: int,
-        rows: int,
-        mm_per_dot: float,
-        x_offset: float,
-        y_offset: float,
-        viewbox_height: float,
-        transform: Transform,
-        job: Job,
-    ) -> List[Tuple[PathSegment, List[int]]]:
-        """Generate scan-line segments from pixel data.
-
-        Args:
-            pixels: PIL pixel access object.
-            cols: Number of pixel columns.
-            rows: Number of pixel rows.
-            mm_per_dot: Physical size of one pixel in mm.
-            x_offset: Image X position in SVG.
-            y_offset: Image Y position in SVG.
-            img_width: Image width in SVG units.
-            img_height: Image height in SVG units.
-            viewbox_height: SVG viewbox height for Y flip.
-            transform: Composed transform for the element.
-            job: Job supplying power range.
-
-        Returns:
-            List of (segment, power_list) tuples with per-pixel S values.
-        """
-        results: List[Tuple[PathSegment, List[int]]] = []
-        power_range = job.power_max - job.power_min
-
-        if self.direction == "horizontal":
-            results = self._horizontal_scan(
-                pixels, cols, rows, mm_per_dot,
-                x_offset, y_offset, viewbox_height,
-                transform, job.power_min, power_range,
-            )
-        else:
-            results = self._vertical_scan(
-                pixels, cols, rows, mm_per_dot,
-                x_offset, y_offset, viewbox_height,
-                transform, job.power_min, power_range,
-            )
-
-        return results
-
     def _pixel_to_power(
         self, pixel_value: int, power_min: float, power_range: float
     ) -> int:
         """Map a grayscale pixel value to laser power.
 
-        White (255) → power_min, Black (0) → power_min + power_range.
+        White (255) → ``power_min``, Black (0) → ``power_min + power_range``.
 
         Args:
-            pixel_value: Grayscale intensity 0-255.
+            pixel_value: Grayscale intensity 0–255.
             power_min: Minimum power S value.
-            power_range: power_max minus power_min.
+            power_range: ``power_max`` minus ``power_min``.
 
         Returns:
-            Computed S value.
+            Computed integer S value.
         """
-        intensity = 1.0 - (pixel_value / 255.0)
-        return int(power_min + intensity * power_range)
+        return int(power_min + (1.0 - pixel_value / 255.0) * power_range)
 
-    def _horizontal_scan(
+    def _scan_lines(
         self,
         pixels: object,
         cols: int,
@@ -220,97 +170,51 @@ class RasterProcessor:
         power_min: float,
         power_range: float,
     ) -> List[Tuple[PathSegment, List[int]]]:
-        """Generate horizontal scan lines.
+        """Generate scan-line segments in the configured direction.
+
+        Horizontal mode iterates over rows as the outer loop; vertical
+        mode iterates over columns.  The inner loop alternates direction
+        (boustrophedon) to minimise travel between lines.
 
         Args:
-            pixels: PIL pixel access object.
-            cols: Pixel columns.
-            rows: Pixel rows.
-            mm_per_dot: Pixel pitch in mm.
-            x_offset: SVG X offset.
-            y_offset: SVG Y offset.
-            viewbox_height: SVG viewbox height.
-            transform: Element transform.
-            power_min: Minimum power.
-            power_range: Power range.
+            pixels: PIL pixel-access object (``image.load()``).
+            cols: Number of pixel columns.
+            rows: Number of pixel rows.
+            mm_per_dot: Physical size of one pixel in mm.
+            x_offset: Image X position in SVG user units.
+            y_offset: Image Y position in SVG user units.
+            viewbox_height: SVG viewbox height for Y-axis flip.
+            transform: Composed element transform.
+            power_min: Minimum laser power.
+            power_range: ``power_max`` minus ``power_min``.
 
         Returns:
-            List of (segment, power_list) tuples with per-pixel S values.
+            List of ``(PathSegment, power_list)`` tuples.
         """
+        is_horizontal = (self.direction == "horizontal")
+        outer_count = rows if is_horizontal else cols
+        inner_count = cols if is_horizontal else rows
+
         results: List[Tuple[PathSegment, List[int]]] = []
 
-        for row in range(rows):
+        for outer in range(outer_count):
+            inner_range = (
+                range(inner_count) # if outer % 2 == 0
+                # else reversed(range(inner_count))
+            )
             points: List[Vector2d] = []
             powers: List[int] = []
 
-            col_range = range(cols) if row % 2 == 0 else range(cols - 1, -1, -1)
-            for col in col_range:
+            for inner in inner_range:
+                col = inner if is_horizontal else outer
+                row = outer if is_horizontal else inner
                 sx = x_offset + col * mm_per_dot
                 sy = y_offset + row * mm_per_dot
                 tx, ty = transform.apply_to_point((sx, sy))
                 points.append(Vector2d(tx, viewbox_height - ty))
-
-                power = self._pixel_to_power(pixels[col, row], power_min, power_range)
-                powers.append(power)
-
-            if len(points) >= 2 and max(powers) > int(power_min):
-                results.append((
-                    PathSegment(
-                        points=points,
-                        element_id="raster",
-                        element_type="raster",
-                        path_type=PathType.OPEN,
-                    ),
-                    powers,
-                ))
-
-        return results
-
-    def _vertical_scan(
-        self,
-        pixels: object,
-        cols: int,
-        rows: int,
-        mm_per_dot: float,
-        x_offset: float,
-        y_offset: float,
-        viewbox_height: float,
-        transform: Transform,
-        power_min: float,
-        power_range: float,
-    ) -> List[Tuple[PathSegment, List[int]]]:
-        """Generate vertical scan lines.
-
-        Args:
-            pixels: PIL pixel access object.
-            cols: Pixel columns.
-            rows: Pixel rows.
-            mm_per_dot: Pixel pitch in mm.
-            x_offset: SVG X offset.
-            y_offset: SVG Y offset.
-            viewbox_height: SVG viewbox height.
-            transform: Element transform.
-            power_min: Minimum power.
-            power_range: Power range.
-
-        Returns:
-            List of (segment, power_list) tuples with per-pixel S values.
-        """
-        results: List[Tuple[PathSegment, List[int]]] = []
-
-        for col in range(cols):
-            points: List[Vector2d] = []
-            powers: List[int] = []
-
-            row_range = range(rows) if col % 2 == 0 else range(rows - 1, -1, -1)
-            for row in row_range:
-                sx = x_offset + col * mm_per_dot
-                sy = y_offset + row * mm_per_dot
-                tx, ty = transform.apply_to_point((sx, sy))
-                points.append(Vector2d(tx, viewbox_height - ty))
-
-                power = self._pixel_to_power(pixels[col, row], power_min, power_range)
-                powers.append(power)
+                powers.append(
+                    self._pixel_to_power(pixels[col, row], power_min, power_range)
+                )
 
             if len(points) >= 2 and max(powers) > int(power_min):
                 results.append((
