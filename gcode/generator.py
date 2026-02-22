@@ -59,7 +59,6 @@ class GCodeGenerator:
             f"; Date: {now}",
             "G21",
             "G90",
-            f"G0 F{TRAVEL_SPEED}",
         ])
 
     def add_footer(self) -> None:
@@ -84,9 +83,7 @@ class GCodeGenerator:
         Returns:
             Formatted axis+value string (e.g. ``X12.34``).
         """
-        formatted = f"{value:.{COORD_PRECISION}f}"
-        formatted = formatted.rstrip("0").rstrip(".")
-        return f"{axis}{formatted}"
+        return f"{axis}{value:.{COORD_PRECISION}f}".rstrip("0").rstrip(".")
 
     def move_to(
         self,
@@ -136,11 +133,29 @@ class GCodeGenerator:
 
         if parts:
             self._commands.append(" ".join(parts))
+            
+    # ------------------------------------------------------------------
+    # Laser control
+    # ------------------------------------------------------------------
+
+    def enable_laser(self, mode: str, power: int) -> None:
+        """Enable laser mode and associated power 
+
+        Args:
+            mode: GRBL laser command string (``"M3"`` or ``"M4"``).
+            power: Initial S value to set on laser enable.
+        """
+        self._commands.append(f"{mode} S{power}")
+        self._state.power = power
+
+    def disable_laser(self) -> None:
+        """Emit M5 (laser off) and clear tracked power state."""
+        self._commands.append("M5")
+        self._state.power = None
 
     # ------------------------------------------------------------------
-    # Segment / Job
-    # ------------------------------------------------------------------
-
+    # Segment / Job / Layer
+    # ------------------------------------------------------------------       
     def add_comment(self, text: str) -> None:
         """Append a G-code comment line.
 
@@ -175,20 +190,13 @@ class GCodeGenerator:
         speed = self.settings.clamp_speed(job.speed)
         power = self.settings.clamp_power(job.power_max)
 
-        # Travel to start
         self.move_to(segment.start_point, is_cutting=False)
+        self.enable_laser(job.laser_mode.value, power)
 
-        # Enable laser
-        self._commands.append(f"{job.laser_mode.value} S{power}")
-        self._state.power = power
-
-        # Cut along path
         for point in segment.points[1:]:
             self.move_to(point, is_cutting=True, speed=speed, power=power)
 
-        # Disable laser after segment
-        self._commands.append("M5")
-        self._state.power = None
+        self.disable_laser()
 
     def add_job(
         self,

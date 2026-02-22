@@ -51,7 +51,7 @@ class PathExtractor:
             List of PathSegment instances.
         """
         element_id = element.get("id", "")
-        cache_key = f"{element_id}_{viewbox_height}"
+        cache_key = (id(element), viewbox_height)
         if cache_key in self._cache:
             return self._cache[cache_key]
 

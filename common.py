@@ -7,8 +7,8 @@ used by both the export pipeline and UI components.
 import logging
 import math
 from typing import List, Tuple
+from itertools import chain
 
-from inkex.paths import CubicSuperPath
 from inkex.transforms import Transform
 from lxml import etree
 
@@ -58,13 +58,10 @@ def is_visible(elem: etree._Element) -> bool:
     Returns:
         True if the element is displayed.
     """
-    current: etree._Element | None = elem
-    while current is not None:
-        style = (current.get("style") or "").replace(" ", "").lower()
-        if "display:none" in style:
-            return False
-        current = current.getparent()
-    return True
+    return not any(
+        "display:none" in (e.get("style") or "").replace(" ", "").lower()
+        for e in chain([elem], elem.iterancestors())
+    )
 
 
 def get_visible_shapes(layer: etree._Element) -> List[etree._Element]:
