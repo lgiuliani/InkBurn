@@ -48,6 +48,8 @@ class PathSegment:
     element_type: str
     path_type: PathType = PathType.OPEN
 
+    _length: float = field(default=-1.0, init=False, repr=False, compare=False)
+
     @property
     def start_point(self) -> Vector2d:
         """Get the starting point of the segment."""
@@ -61,12 +63,14 @@ class PathSegment:
     @property
     def length(self) -> float:
         """Calculate total length of the segment."""
-        if len(self.points) < 2:
-            return 0.0
-        total = 0.0
-        for i in range(len(self.points) - 1):
-            total += distance(self.points[i], self.points[i + 1])
-        return total
+        if self._length < 0:
+            if len(self.points) < 2:
+                self._length = 0.0
+            else:
+                self._length = sum(
+                    distance(a, b) for a, b in zip(self.points, self.points[1:])
+                )
+        return self._length
 
     def reverse(self) -> "PathSegment":
         """Return a reversed copy of this segment."""
