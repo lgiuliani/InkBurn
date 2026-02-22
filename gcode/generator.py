@@ -11,8 +11,7 @@ from typing import List, Optional
 from inkex.transforms import Vector2d
 
 from constants import COORD_PRECISION, TRAVEL_SPEED
-from models.job import Job, JobType
-from models.layer import Layer
+from models.job import Job
 from models.machine import MachineSettings
 from models.path import GCodeState, PathSegment
 
@@ -139,7 +138,7 @@ class GCodeGenerator:
             self._commands.append(" ".join(parts))
 
     # ------------------------------------------------------------------
-    # Segment / Job / Layer
+    # Segment / Job
     # ------------------------------------------------------------------
 
     def add_comment(self, text: str) -> None:
