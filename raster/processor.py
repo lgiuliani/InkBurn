@@ -198,18 +198,39 @@ class RasterProcessor:
         results: List[Tuple[PathSegment, List[int]]] = []
 
         for outer in range(outer_count):
-            inner_range = (
-                range(inner_count) # if outer % 2 == 0
-                # else reversed(range(inner_count))
+            reversed_pass = (outer % 2 != 0)
+            pixel_indices = (
+                list(reversed(range(inner_count)))
+                if reversed_pass
+                else list(range(inner_count))
             )
+
             points: List[Vector2d] = []
             powers: List[int] = []
 
-            for inner in inner_range:
+            for step, inner in enumerate(pixel_indices):
                 col = inner if is_horizontal else outer
                 row = outer if is_horizontal else inner
-                sx = x_offset + col * mm_per_dot
-                sy = y_offset + row * mm_per_dot
+
+                if step == 0:
+                    # Leading edge before the first pixel (rapid target).
+                    # Forward → left edge of pixel 0.
+                    # Reverse → right edge of pixel n-1.
+                    sx, sy = self._pixel_edge(
+                        col, row, mm_per_dot, x_offset, y_offset,
+                        is_horizontal, entering=True, reversed_pass=reversed_pass,
+                    )
+                    tx, ty = transform.apply_to_point((sx, sy))
+                    points.append(Vector2d(tx, viewbox_height - ty))
+                    powers.append(0)
+
+                # Trailing edge of this pixel (G1 destination).
+                # Forward → right edge of pixel.
+                # Reverse → left edge of pixel.
+                sx, sy = self._pixel_edge(
+                    col, row, mm_per_dot, x_offset, y_offset,
+                    is_horizontal, entering=False, reversed_pass=reversed_pass,
+                )
                 tx, ty = transform.apply_to_point((sx, sy))
                 points.append(Vector2d(tx, viewbox_height - ty))
                 powers.append(
@@ -228,3 +249,48 @@ class RasterProcessor:
                 ))
 
         return results
+
+    @staticmethod
+    def _pixel_edge(
+        col: int,
+        row: int,
+        mm_per_dot: float,
+        x_offset: float,
+        y_offset: float,
+        is_horizontal: bool,
+        entering: bool,
+        reversed_pass: bool,
+    ) -> Tuple[float, float]:
+        """Return the physical coordinate of a pixel edge.
+
+        For the scan axis (X in horizontal, Y in vertical):
+        - ``entering=True``  → the edge the beam enters from.
+        - ``entering=False`` → the edge the beam exits toward.
+
+        Forward pass enters from the left/top edge, exits right/bottom.
+        Reversed pass enters from the right/bottom edge, exits left/top.
+
+        Args:
+            col: Pixel column index.
+            row: Pixel row index.
+            mm_per_dot: Pixel pitch in mm.
+            x_offset: Image X origin in SVG units.
+            y_offset: Image Y origin in SVG units.
+            is_horizontal: Whether the scan axis is X.
+            entering: True for the entry edge, False for the exit edge.
+            reversed_pass: Whether this pass runs in reverse.
+
+        Returns:
+            ``(sx, sy)`` coordinate pair.
+        """
+        # For the scan axis, pick left (col*d) or right ((col+1)*d) edge.
+        # Forward enter / Reverse exit  → left  edge = col * d
+        # Forward exit  / Reverse enter → right edge = (col + 1) * d
+        use_right = (entering == reversed_pass)
+        if is_horizontal:
+            sx = x_offset + (col + (1 if use_right else 0)) * mm_per_dot
+            sy = y_offset + row * mm_per_dot
+        else:
+            sx = x_offset + col * mm_per_dot
+            sy = y_offset + (row + (1 if use_right else 0)) * mm_per_dot
+        return sx, sy
