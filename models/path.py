@@ -32,7 +32,7 @@ def distance(p1: Vector2d, p2: Vector2d) -> float:
     return math.hypot(p2.x - p1.x, p2.y - p1.y)
 
 
-@dataclass
+@dataclass(lots=True)
 class PathSegment:
     """Represents a continuous path segment with metadata.
 
@@ -88,7 +88,7 @@ class PathSegment:
         return distance(self.start_point, self.end_point) < 0.01
 
 
-@dataclass
+@dataclass(slots=True)
 class GCodeState:
     """Tracks the current state of G-code generation to avoid redundancy.
 
@@ -115,7 +115,7 @@ class GCodeState:
         self.speed = None
 
 
-@dataclass
+@dataclass(slots=True)
 class OptimizationMetrics:
     """Metrics collected during path optimization.
 

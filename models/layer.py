@@ -10,7 +10,7 @@ from typing import Dict, List
 from models.job import Job, JobType
 
 
-@dataclass
+@dataclass(slots=True)
 class Layer:
     """Represents an SVG layer with its associated laser jobs.
 

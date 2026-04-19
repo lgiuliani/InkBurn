@@ -19,7 +19,7 @@ class DebugLevel(str, Enum):
     VERBOSE = "verbose"
 
 
-@dataclass
+@dataclass(slots=True)
 class MachineSettings:
     """Machine-level configuration.
 

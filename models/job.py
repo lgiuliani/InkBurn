@@ -42,7 +42,7 @@ _DEFAULT_PARAMS: Dict[JobType, Dict[str, Any]] = {
 }
 
 
-@dataclass
+@dataclass(slots=True)
 class Job:
     """Single laser operation on a layer.
 
