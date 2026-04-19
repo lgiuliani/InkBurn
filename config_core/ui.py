@@ -6,7 +6,7 @@ with job management controls (add/remove/reorder/edit).
 
 import gi
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, GLib
+from gi.repository import Gtk
 from typing import Dict, List, Optional
 
 from config_core.helpers import (
