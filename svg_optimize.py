@@ -10,9 +10,12 @@ from inkex.transforms import Vector2d
 from lxml import etree
 
 from common import get_visible_shapes, is_visible, list_layers
+from debug_utils import debug_output
 from geometry.extractor import PathExtractor
 from geometry.optimizer import PathOptimizer
+from models import DebugLevel
 from models.path import PathSegment
+from persistence.preferences import load_machine_settings
 
 
 class SvgOptimize(inkex.EffectExtension):
@@ -23,6 +26,7 @@ class SvgOptimize(inkex.EffectExtension):
         svg = self.document.getroot()
         viewbox_height = svg.viewbox_height
         extractor = PathExtractor()
+        settings = load_machine_settings()
 
         total_reordered = 0
 
@@ -66,13 +70,15 @@ class SvgOptimize(inkex.EffectExtension):
 
             total_reordered += len(optimized)
 
-            inkex.utils.debug(
+            debug_output(
+                settings,
                 f"Reordered {len(optimized)} elements: "
-                f"travel reduced by {metrics.travel_savings:.1f}%"
+                f"travel reduced by {metrics.travel_savings:.1f}%",
+                DebugLevel.INFO,
             )
 
         if total_reordered == 0:
-            inkex.utils.debug("No reordering needed.")
+            debug_output(settings, "No reordering needed.", DebugLevel.INFO)
 
 
 if __name__ == "__main__":

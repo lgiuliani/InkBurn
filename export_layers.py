@@ -5,6 +5,8 @@ processes each visible layer's active jobs in order, and writes a
 single ``.nc`` file with GRBL 1.1 compatible G-code.
 """
 
+from debug_utils import debug_output
+from models import DebugLevel, MachineSettings
 import logging
 import subprocess
 from pathlib import Path
@@ -92,16 +94,15 @@ class ExportGCode(inkex.OutputExtension):
         output_path.write_text(self._generator.get_gcode(), encoding="utf-8")
 
         # Log optimization summary
-        if (
-            self._settings.path_optimization
-            and total_metrics.original_travel_distance > 0
-        ):
-            inkex.utils.debug(
+        if self._settings.path_optimization and total_metrics.original_travel_distance > 0:
+            debug_output(
+                self._settings,
                 f"\n=== Optimization Summary ===\n"
                 f"Travel reduced: {total_metrics.travel_savings:.1f}%\n"
                 f"Original: {total_metrics.original_travel_distance:.1f}mm\n"
                 f"Optimized: {total_metrics.optimized_travel_distance:.1f}mm\n"
-                f"Paths reversed: {total_metrics.paths_reversed}"
+                f"Paths reversed: {total_metrics.paths_reversed}",
+                DebugLevel.INFO,
             )
 
         # Autolaunch
@@ -109,7 +110,11 @@ class ExportGCode(inkex.OutputExtension):
             try:
                 _open_file(str(output_path))
             except Exception as exc:
-                inkex.utils.debug(f"Autolaunch failed: {exc}")
+                debug_output(
+                    self._settings,
+                    f"Autolaunch failed: {exc}",
+                    DebugLevel.CRITICAL,
+                )
 
     # ------------------------------------------------------------------
     # Layer processing
@@ -211,8 +216,10 @@ class ExportGCode(inkex.OutputExtension):
                 hatch_segments.extend(hatches)
 
         if not hatch_segments:
-            inkex.utils.debug(
-                f"Layer '{layer.label}': No closed paths for fill job"
+            debug_output(
+                self._settings,
+                f"Layer '{layer.label}': No closed paths for fill job",
+                DebugLevel.WARNING,
             )
             return
 
@@ -241,8 +248,10 @@ class ExportGCode(inkex.OutputExtension):
         """
         images = get_image_elements(elem)
         if not images:
-            inkex.utils.debug(
-                f"Layer '{layer.label}': No images for raster job"
+            debug_output(
+                self._settings,
+                f"Layer '{layer.label}': No images for raster job",
+                DebugLevel.WARNING,
             )
             return
 
@@ -325,9 +334,11 @@ class ExportGCode(inkex.OutputExtension):
         total_metrics.optimized_travel_distance += metrics.optimized_travel_distance
         total_metrics.paths_reversed += metrics.paths_reversed
 
-        inkex.utils.debug(
+        debug_output(
+            self._settings,
             f"Layer '{label}': Travel reduced by {metrics.travel_savings:.1f}% "
-            f"({metrics.paths_reversed} paths reversed)"
+            f"({metrics.paths_reversed} paths reversed)",
+            DebugLevel.INFO,
         )
 
         return optimized

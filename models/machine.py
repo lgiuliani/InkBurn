@@ -14,9 +14,9 @@ logger = logging.getLogger(__name__)
 class DebugLevel(str, Enum):
     """Verbosity level for extension debug output."""
 
-    OFF = "off"
-    MIN = "min"
-    VERBOSE = "verbose"
+    CRITICAL = "critical"
+    WARNING = "warning"
+    INFO = "info"
 
 
 @dataclass(slots=True)
@@ -45,7 +45,7 @@ class MachineSettings:
     resolution: float = 0.1
     kerf_width: float = 0.0
     laser_mode: bool = True
-    debug_level: DebugLevel = DebugLevel.OFF
+    debug_level: DebugLevel = DebugLevel.WARNING
     path_optimization: bool = True
     direction_optimization: bool = True
     autolaunch: bool = False

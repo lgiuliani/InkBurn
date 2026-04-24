@@ -53,7 +53,7 @@ def load_machine_settings(path: Optional[str] = None) -> MachineSettings:
         resolution=cfg.getfloat("resolution", fallback=0.1),
         kerf_width=cfg.getfloat("kerf_width", fallback=0.0),
         laser_mode=cfg.getboolean("laser_mode", fallback=True),
-        debug_level=DebugLevel(cfg.get("debug_level", fallback="off")),
+        debug_level=DebugLevel(cfg.get("debug_level", fallback="warning")),
         path_optimization=cfg.getboolean("path_optimization", fallback=True),
         direction_optimization=cfg.getboolean("direction_optimization", fallback=True),
         autolaunch=cfg.getboolean("autolaunch", fallback=False),
