@@ -9,7 +9,12 @@ import json
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict
+from typing import Any, Dict, List, Literal, Tuple, Type
+
+StorageKind = Literal["job", "params"]
+
+# GTK / schema row: (name, label, type, min, max, step) — matches ``ParamDef`` in config_core.
+JobParamSchemaRow = Tuple[str, str, Type[Any], float, float, float]
 
 
 class JobType(str, Enum):
@@ -27,19 +32,115 @@ class LaserMode(str, Enum):
     M4 = "M4"
 
 
-# Default type-specific parameters per job type.
-_DEFAULT_PARAMS: Dict[JobType, Dict[str, Any]] = {
-    JobType.CUT: {},
-    JobType.FILL: {
-        "angle": 45.0,
-        "spacing": 0.5,
-        "alternate": True,
-    },
-    JobType.RASTER: {
-        "dpi": 300,
-        "direction": "horizontal",
-    },
-}
+@dataclass(frozen=True, slots=True)
+class JobParamSpec:
+    """Single configurable job field: UI metadata and optional ``params`` default."""
+
+    name: str
+    label: str
+    value_type: Type[Any]
+    min_v: float
+    max_v: float
+    step: float
+    storage: StorageKind = "job"
+    default: Any = None
+
+
+def _job_param_specs() -> Dict[JobType, Tuple[JobParamSpec, ...]]:
+    """Authoritative job parameter list per type (order = UI order)."""
+    return {
+        JobType.CUT: (
+            JobParamSpec("speed", "Feed rate (mm/min)", float, 10, 10000, 10),
+            JobParamSpec("power_max", "Power max (S value)", float, 0, 10000, 10),
+            JobParamSpec("power_min", "Power min (S value)", float, 0, 10000, 10),
+            JobParamSpec("passes", "Passes", int, 1, 100, 1),
+            JobParamSpec("offset", "Offset (mm)", float, -10, 10, 0.01),
+        ),
+        JobType.FILL: (
+            JobParamSpec("speed", "Feed rate (mm/min)", float, 10, 10000, 10),
+            JobParamSpec("power_max", "Power max (S value)", float, 0, 10000, 10),
+            JobParamSpec("power_min", "Power min (S value)", float, 0, 10000, 10),
+            JobParamSpec("passes", "Passes", int, 1, 100, 1),
+            JobParamSpec(
+                "angle",
+                "Hatch angle (°)",
+                float,
+                0,
+                360,
+                1,
+                "params",
+                45.0,
+            ),
+            JobParamSpec(
+                "spacing",
+                "Line spacing (mm)",
+                float,
+                0.01,
+                10.0,
+                0.01,
+                "params",
+                0.5,
+            ),
+            JobParamSpec(
+                "alternate",
+                "Alternate direction",
+                bool,
+                0,
+                1,
+                1,
+                "params",
+                True,
+            ),
+        ),
+        JobType.RASTER: (
+            JobParamSpec("speed", "Feed rate (mm/min)", float, 10, 10000, 10),
+            JobParamSpec("power_max", "Power max (S value)", float, 0, 10000, 10),
+            JobParamSpec("power_min", "Power min (S value)", float, 0, 10000, 10),
+            JobParamSpec(
+                "dpi",
+                "Resolution (DPI)",
+                int,
+                50,
+                1200,
+                10,
+                "params",
+                300,
+            ),
+            JobParamSpec(
+                "direction",
+                "Direction",
+                str,
+                0,
+                0,
+                0,
+                "params",
+                "horizontal",
+            ),
+        ),
+    }
+
+
+JOB_PARAM_SPECS: Dict[JobType, Tuple[JobParamSpec, ...]] = _job_param_specs()
+
+
+def job_param_schema_rows() -> Dict[JobType, List[JobParamSchemaRow]]:
+    """Schema tuples for the layer/job GTK dialog (``PARAM_SCHEMA``)."""
+    return {
+        jt: [
+            (s.name, s.label, s.value_type, s.min_v, s.max_v, s.step)
+            for s in JOB_PARAM_SPECS[jt]
+        ]
+        for jt in JobType
+    }
+
+
+def _default_params_for_type(job_type: JobType) -> Dict[str, Any]:
+    """Type-specific ``params`` dict defaults (subset of ``JOB_PARAM_SPECS``)."""
+    return {
+        s.name: s.default
+        for s in JOB_PARAM_SPECS[job_type]
+        if s.storage == "params"
+    }
 
 
 @dataclass(slots=True)
@@ -103,7 +204,7 @@ class Job:
             Populated Job instance.
         """
         job_type = JobType(data.get("type", "cut"))
-        default_params = _DEFAULT_PARAMS.get(job_type, {}).copy()
+        default_params = _default_params_for_type(job_type).copy()
         raw_params = data.get("params", {})
         default_params.update(raw_params)
 
@@ -143,7 +244,7 @@ class Job:
         Returns:
             New Job instance with default parameters.
         """
-        params = _DEFAULT_PARAMS.get(job_type, {}).copy()
+        params = _default_params_for_type(job_type).copy()
         laser_mode = LaserMode.M4 if job_type == JobType.RASTER else LaserMode.M3
         return cls(type=job_type, laser_mode=laser_mode, params=params)
 
@@ -157,15 +258,17 @@ class Job:
                 f"F{self.speed:.0f} {self.passes}× {mode}"
             )
         if self.type == JobType.FILL:
-            angle = self.params.get("angle", 0)
-            spacing = self.params.get("spacing", 0)
+            fb = _default_params_for_type(JobType.FILL)
+            angle = self.params.get("angle", fb["angle"])
+            spacing = self.params.get("spacing", fb["spacing"])
             return (
                 f"[{active}] Fill: S{self.power_min:.0f}-{self.power_max:.0f} "
                 f"{spacing}mm {angle:.0f}° {mode}"
             )
         if self.type == JobType.RASTER:
-            dpi = self.params.get("dpi", 0)
-            direction = self.params.get("direction", "horizontal")
+            fb = _default_params_for_type(JobType.RASTER)
+            dpi = self.params.get("dpi", fb["dpi"])
+            direction = self.params.get("direction", fb["direction"])
             return (
                 f"[{active}] Raster: {dpi}DPI "
                 f"S{self.power_min:.0f}-{self.power_max:.0f} {direction} {mode}"

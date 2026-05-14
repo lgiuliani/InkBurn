@@ -1,40 +1,16 @@
 """GTK helper widgets and parameter schema for job configuration."""
 
 import gi
+
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 from typing import Dict, List, Tuple
 
-from models.job import JobType
+from models.job import JobParamSchemaRow, JobType, job_param_schema_rows
 
+ParamDef = JobParamSchemaRow
 
-ParamDef = Tuple[str, str, type, float, float, float]
-
-PARAM_SCHEMA: Dict[JobType, List[ParamDef]] = {
-    JobType.CUT: [
-        ("speed", "Feed rate (mm/min)", float, 10, 10000, 10),
-        ("power_max", "Power max (S value)", float, 0, 10000, 10),
-        ("power_min", "Power min (S value)", float, 0, 10000, 10),
-        ("passes", "Passes", int, 1, 100, 1),
-        ("offset", "Offset (mm)", float, -10, 10, 0.01),
-    ],
-    JobType.FILL: [
-        ("speed", "Feed rate (mm/min)", float, 10, 10000, 10),
-        ("power_max", "Power max (S value)", float, 0, 10000, 10),
-        ("power_min", "Power min (S value)", float, 0, 10000, 10),
-        ("passes", "Passes", int, 1, 100, 1),
-        ("angle", "Hatch angle (°)", float, 0, 360, 1),
-        ("spacing", "Line spacing (mm)", float, 0.01, 10.0, 0.01),
-        ("alternate", "Alternate direction", bool, 0, 1, 1),
-    ],
-    JobType.RASTER: [
-        ("speed", "Feed rate (mm/min)", float, 10, 10000, 10),
-        ("power_max", "Power max (S value)", float, 0, 10000, 10),
-        ("power_min", "Power min (S value)", float, 0, 10000, 10),
-        ("dpi", "Resolution (DPI)", int, 50, 1200, 10),
-        ("direction", "Direction", str, 0, 0, 0),
-    ],
-}
+PARAM_SCHEMA: Dict[JobType, List[ParamDef]] = job_param_schema_rows()
 
 
 def make_labeled_spin(
