@@ -41,12 +41,16 @@ class PathSegment:
         element_id: SVG element ``id`` this segment was extracted from.
         element_type: SVG tag name (e.g. ``path``, ``rect``).
         path_type: Whether the segment is closed or open.
+        power: Optional per-segment laser power override.
+        powers: Optional per-point laser power values.
     """
 
     points: List[Vector2d]
     element_id: str
     element_type: str
     path_type: PathType = PathType.OPEN
+    power: Optional[float] = None
+    powers: Optional[List[float]] = None
 
     _length: float = field(default=-1.0, init=False, repr=False, compare=False)
 
@@ -79,6 +83,8 @@ class PathSegment:
             element_id=self.element_id,
             element_type=self.element_type,
             path_type=self.path_type,
+            power=self.power,
+            powers=list(reversed(self.powers)) if self.powers is not None else None,
         )
 
     def is_closed(self) -> bool:

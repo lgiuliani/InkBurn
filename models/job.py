@@ -160,7 +160,7 @@ class Job:
             angle = self.params.get("angle", 0)
             spacing = self.params.get("spacing", 0)
             return (
-                f"[{active}] Fill: S{self.power_max:.0f} "
+                f"[{active}] Fill: S{self.power_min:.0f}-{self.power_max:.0f} "
                 f"{spacing}mm {angle:.0f}° {mode}"
             )
         if self.type == JobType.RASTER:

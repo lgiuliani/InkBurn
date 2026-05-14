@@ -19,6 +19,7 @@
 
 **Fill (Hatching)**
 - Vector scanline hatching for filled areas
+- Solid and gradient fill color → laser power interpolation (white=min, black=max)
 - Configurable angle (0-360°), spacing, and alternating direction
 - Processes closed paths only
 

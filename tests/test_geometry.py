@@ -56,10 +56,14 @@ class TestPathSegment:
     def test_reverse(self) -> None:
         """Reversing a segment reverses point order."""
         seg = self._make_segment([(0, 0), (5, 5), (10, 0)])
+        seg.power = 420
+        seg.powers = [100, 200, 300]
         rev = seg.reverse()
         assert rev.start_point.x == 10
         assert rev.end_point.x == 0
         assert rev.element_id == seg.element_id
+        assert rev.power == seg.power
+        assert rev.powers == [300, 200, 100]
 
     def test_is_closed(self) -> None:
         """Segment with start ≈ end is closed."""

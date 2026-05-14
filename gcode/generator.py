@@ -187,13 +187,24 @@ class GCodeGenerator:
         self.add_shape_comment(segment)
 
         speed = self.settings.clamp_speed(job.speed)
-        power = self.settings.clamp_power(job.power_max)
+        powers = (
+            [self.settings.clamp_power(power) for power in segment.powers]
+            if segment.powers and len(segment.powers) == len(segment.points)
+            else None
+        )
+        segment_power = job.power_max if segment.power is None else segment.power
+        power = (
+            powers[0]
+            if powers is not None
+            else self.settings.clamp_power(segment_power)
+        )
 
         self.move_to(segment.start_point, is_cutting=False)
         self.enable_laser(job.laser_mode.value, power)
 
-        for point in segment.points[1:]:
-            self.move_to(point, is_cutting=True, speed=speed, power=power)
+        for idx, point in enumerate(segment.points[1:], start=1):
+            point_power = powers[idx] if powers is not None else power
+            self.move_to(point, is_cutting=True, speed=speed, power=point_power)
 
         self.disable_laser()
 
