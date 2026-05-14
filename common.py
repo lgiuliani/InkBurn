@@ -103,37 +103,3 @@ def get_image_elements(layer: etree._Element) -> List[etree._Element]:
         if is_visible(elem)
     ]
 
-
-def layer_distance(
-    layer: etree._Element,
-    start_point: Tuple[float, float] = (0.0, 0.0),
-) -> Tuple[float, float, Tuple[float, float]]:
-    """Calculate engrave and travel distances for a layer.
-
-    Args:
-        layer: Layer ``<g>`` element.
-        start_point: Starting position as (x, y).
-
-    Returns:
-        Tuple of (engrave_distance, travel_distance, end_point).
-    """
-    elements = get_visible_shapes(layer)
-
-    engrave = 0.0
-    travel = 0.0
-    last_point = start_point
-
-    for elem in elements:
-        transform = Transform(elem.composed_transform())
-        path = elem.path.transform(transform)
-        superpath = path.to_superpath()
-        if not superpath:
-            continue
-
-        for subpath in superpath:
-            for p1, p2 in zip(subpath[:-1], subpath[1:]):
-                engrave += math.dist(p1[1], p2[1])
-            travel += math.dist(last_point, subpath[0][1])
-            last_point = subpath[-1][1]
-
-    return engrave, travel, last_point
