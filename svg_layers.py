@@ -1,20 +1,15 @@
-"""SVG utility functions for InkBurn extension.
+"""SVG layer and shape helpers for InkBurn.
 
-Provides layer discovery, visibility checks, and element filtering
-used by both the export pipeline and UI components.
+Layer discovery, visibility checks, and per-layer element filtering
+used by the export pipeline, SVG optimization, and persistence.
 """
 
-import logging
-import math
-from typing import List, Tuple
 from itertools import chain
+from typing import List
 
-from inkex.transforms import Transform
 from lxml import etree
 
 from constants import NS, inkscape_qname
-
-logger = logging.getLogger(__name__)
 
 
 def list_layers(svg: etree._Element) -> List[etree._Element]:
@@ -102,4 +97,3 @@ def get_image_elements(layer: etree._Element) -> List[etree._Element]:
         elem for elem in layer.xpath(".//svg:image", namespaces=NS)
         if is_visible(elem)
     ]
-

@@ -11,7 +11,7 @@ from typing import Dict, List, Tuple
 from lxml import etree
 
 from constants import inkscape_qname
-from common import get_layer_name, is_visible
+from svg_layers import get_layer_name, is_visible
 from models.layer import Layer
 
 logger = logging.getLogger(__name__)

@@ -9,7 +9,7 @@ import inkex
 from inkex.transforms import Vector2d
 from lxml import etree
 
-from common import get_visible_shapes, is_visible, list_layers
+from svg_layers import get_visible_shapes, is_visible, list_layers
 from debug_utils import debug_output
 from geometry.extractor import PathExtractor
 from geometry.optimizer import PathOptimizer

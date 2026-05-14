@@ -14,7 +14,7 @@ from typing import List, Tuple
 import inkex
 from lxml import etree
 
-from common import get_image_elements, get_visible_shapes, is_visible
+from svg_layers import get_image_elements, get_visible_shapes, is_visible
 from debug_utils import debug_output
 from gcode.generator import GCodeGenerator
 from geometry.extractor import PathExtractor
