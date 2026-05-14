@@ -18,6 +18,21 @@ NS = {
 INKSCAPE_NS = "http://www.inkscape.org/namespaces/inkscape"
 
 
+def inkscape_qname(local: str) -> str:
+    """Clark notation ``{namespace}local`` for Inkscape XML attributes.
+
+    Use for ``elem.get(...)`` / ``elem.set(...)`` where lxml expects expanded
+    names, avoiding duplicated ``f\"{{{...}}}name\"`` literals.
+
+    Args:
+        local: Local name without prefix (e.g. ``\"label\"``, ``\"groupmode\"``).
+
+    Returns:
+        Full attribute name in Clark notation.
+    """
+    return f"{{{INKSCAPE_NS}}}{local}"
+
+
 # =============================================================================
 # G-Code Generation
 # =============================================================================

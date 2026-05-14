@@ -10,9 +10,8 @@ from typing import Dict, List, Tuple
 
 from lxml import etree
 
-from constants import INKSCAPE_NS
-from common import is_visible
-from models.job import Job
+from constants import inkscape_qname
+from common import get_layer_name, is_visible
 from models.layer import Layer
 
 logger = logging.getLogger(__name__)
@@ -29,19 +28,7 @@ def _is_layer(elem: etree._Element) -> bool:
     Returns:
         True if *elem* is an ``inkscape:groupmode="layer"`` group.
     """
-    return elem.get(f"{{{INKSCAPE_NS}}}groupmode") == "layer"
-
-
-def _get_layer_label(elem: etree._Element) -> str:
-    """Return the human-readable label of a layer element.
-
-    Args:
-        elem: Layer ``<g>`` element.
-
-    Returns:
-        Label string from ``inkscape:label``, falling back to ``id``.
-    """
-    return elem.get(f"{{{INKSCAPE_NS}}}label") or elem.get("id") or "Unnamed"
+    return elem.get(inkscape_qname("groupmode")) == "layer"
 
 
 def load_layers(
@@ -64,7 +51,7 @@ def load_layers(
         if not _is_layer(elem):
             continue
         layer_id = elem.get("id", "")
-        label = _get_layer_label(elem)
+        label = get_layer_name(elem)
         visible = is_visible(elem)
         attrs = dict(elem.attrib)
 

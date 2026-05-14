@@ -12,7 +12,7 @@ from itertools import chain
 from inkex.transforms import Transform
 from lxml import etree
 
-from constants import INKSCAPE_NS, NS
+from constants import NS, inkscape_qname
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ def get_layer_name(layer: etree._Element) -> str:
     Returns:
         Label string, falling back to ``id`` or ``"Unnamed Layer"``.
     """
-    name = layer.get(f"{{{INKSCAPE_NS}}}label") or layer.get("id")
+    name = layer.get(inkscape_qname("label")) or layer.get("id")
     return name if name else "Unnamed Layer"
 
 
