@@ -64,6 +64,7 @@ class GCodeGenerator:
     def add_footer(self) -> None:
         """Add G-code file footer."""
         self._commands.extend([
+            "M5",
             "G0 X0 Y0",
             "M2",
         ])
