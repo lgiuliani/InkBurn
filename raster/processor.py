@@ -32,10 +32,9 @@ except ImportError:  # pragma: no cover
 class RasterProcessor:
     """Processes ``<image>`` SVG elements into scan-line path segments.
 
-    Each scan line contains per-pixel power values derived from the image
-    grayscale.  The caller (G-code generator) is responsible for emitting
-    the appropriate S values and must clamp them through MachineSettings
-    before passing to the generator.
+    Each scan line is a ``PathSegment`` with ``powers`` set (one value per
+    point, aligned with ``points``).  ``GCodeGenerator.add_segment`` clamps
+    powers through ``MachineSettings``.
 
     Attributes:
         dpi: Output resolution in dots per inch.
@@ -57,8 +56,8 @@ class RasterProcessor:
         element: etree._Element,
         viewbox_height: float,
         job: Job,
-    ) -> List[Tuple[PathSegment, List[int]]]:
-        """Convert an ``<image>`` element to scan-line segments with per-pixel power.
+    ) -> List[PathSegment]:
+        """Convert an ``<image>`` element to scan-line segments with per-point power.
 
         Args:
             element: SVG ``<image>`` element.
@@ -66,9 +65,8 @@ class RasterProcessor:
             job: Job supplying ``power_min`` / ``power_max``.
 
         Returns:
-            List of ``(PathSegment, power_list)`` tuples.  Each segment
-            is one scan line; the corresponding ``power_list`` holds one
-            integer S value per point.
+            One open ``PathSegment`` per scan line, with ``powers`` parallel
+            to ``points`` (S values before machine clamping).
         """
         if Image is None:
             logger.error("Pillow not installed — cannot process raster job")
@@ -169,7 +167,7 @@ class RasterProcessor:
         transform: Transform,
         power_min: float,
         power_range: float,
-    ) -> List[Tuple[PathSegment, List[int]]]:
+    ) -> List[PathSegment]:
         """Generate scan-line segments in the configured direction.
 
         Horizontal mode iterates over rows as the outer loop; vertical
@@ -189,13 +187,13 @@ class RasterProcessor:
             power_range: ``power_max`` minus ``power_min``.
 
         Returns:
-            List of ``(PathSegment, power_list)`` tuples.
+            Segments with ``powers`` set (one S value per vertex).
         """
         is_horizontal = (self.direction == "horizontal")
         outer_count = rows if is_horizontal else cols
         inner_count = cols if is_horizontal else rows
 
-        results: List[Tuple[PathSegment, List[int]]] = []
+        results: List[PathSegment] = []
 
         for outer in range(outer_count):
             reversed_pass = (outer % 2 != 0)
@@ -238,15 +236,15 @@ class RasterProcessor:
                 )
 
             if len(points) >= 2 and max(powers) > int(power_min):
-                results.append((
+                results.append(
                     PathSegment(
                         points=points,
                         element_id="raster",
                         element_type="raster",
                         path_type=PathType.OPEN,
+                        powers=[float(p) for p in powers],
                     ),
-                    powers,
-                ))
+                )
 
         return results
 

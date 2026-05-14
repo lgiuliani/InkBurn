@@ -202,28 +202,14 @@ class ExportGCode(inkex.OutputExtension):
         direction = str(job.params.get("direction", "horizontal"))
         processor = RasterProcessor(dpi=dpi, direction=direction)
 
-        self._generator.add_comment(f"Layer: {layer.label}")
-        self._generator.add_comment(
-            f"Job: {job.type.value} {job_index} (id={job.id})"
-        )
-
+        segments: List[PathSegment] = []
         for img_elem in images:
-            scanlines = processor.process_image_element(
-                img_elem, viewbox_height, job
+            segments.extend(
+                processor.process_image_element(img_elem, viewbox_height, job)
             )
-            speed = self._settings.clamp_speed(job.speed)
-            for segment, power_list in scanlines:
-                self._generator.add_shape_comment(segment)
-                self._generator.move_to(segment.start_point, is_cutting=False)
-                self._generator.enable_laser(job.laser_mode.value, power_list[0])
 
-                for idx, point in enumerate(segment.points[1:], start=1):
-                    power = power_list[idx]
-                    self._generator.move_to(
-                        point, is_cutting=True, speed=speed, power=power
-                    )
-
-                self._generator.disable_laser()
+        self._generator.add_comment(f"Layer: {layer.label}")
+        self._generator.add_job(segments, job, job_index)
 
     # ------------------------------------------------------------------
     # Fill construction
