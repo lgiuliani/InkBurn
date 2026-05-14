@@ -14,7 +14,7 @@ from gi.repository import Gtk
 import inkex
 from lxml import etree
 
-from config_core.svg_io import load_layers, save_layers
+from persistence.svg_io import load_layers, save_layers
 from config_core.ui import UIManager
 
 
