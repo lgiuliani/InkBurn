@@ -1,3 +1,4 @@
+#!tests/test_debug_utils.py
 """Tests for filtered Inkscape debug output."""
 
 import sys
@@ -15,18 +16,27 @@ class TestDebugOutput:
 
     def test_emits_when_level_is_allowed(self) -> None:
         """Messages at or below the configured level are emitted."""
-        settings = MachineSettings(debug_level=DebugLevel.VERBOSE)
+        settings = MachineSettings(debug_level=DebugLevel.INFO)
 
         with patch("debug_utils.inkex.utils.debug") as mock_debug:
-            debug_output(settings, "hello", DebugLevel.MIN)
+            debug_output(settings, "hello", DebugLevel.WARNING)
 
         mock_debug.assert_called_once_with("hello")
 
-    def test_skips_when_level_is_too_low(self) -> None:
-        """Messages above the configured level are suppressed."""
-        settings = MachineSettings(debug_level=DebugLevel.OFF)
+    def test_skips_when_level_is_too_verbose(self) -> None:
+        """Messages more verbose than the configured level are suppressed."""
+        settings = MachineSettings(debug_level=DebugLevel.CRITICAL)
 
         with patch("debug_utils.inkex.utils.debug") as mock_debug:
-            debug_output(settings, "hidden", DebugLevel.MIN)
+            debug_output(settings, "hidden", DebugLevel.INFO)
 
         mock_debug.assert_not_called()
+
+    def test_emits_at_exact_configured_level(self) -> None:
+        """Messages exactly at the configured level are emitted."""
+        settings = MachineSettings(debug_level=DebugLevel.WARNING)
+
+        with patch("debug_utils.inkex.utils.debug") as mock_debug:
+            debug_output(settings, "visible", DebugLevel.WARNING)
+
+        mock_debug.assert_called_once_with("visible")
