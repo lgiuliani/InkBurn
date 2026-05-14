@@ -11,7 +11,7 @@ import logging
 import subprocess
 from pathlib import Path
 from sys import platform
-from typing import List
+from typing import Dict, List, Optional, Tuple
 
 import inkex
 from lxml import etree
@@ -19,7 +19,7 @@ from lxml import etree
 from common import get_image_elements, get_visible_shapes, is_visible, list_layers
 from gcode.generator import GCodeGenerator
 from geometry.extractor import PathExtractor
-from geometry.hatching import generate_hatch_lines
+from geometry.hatching import generate_hatch_lines_for_polygons
 from geometry.optimizer import PathOptimizer
 from models.job import Job, JobType
 from models.layer import Layer
@@ -29,6 +29,98 @@ from persistence.svg_io import load_layers
 from raster.processor import RasterProcessor
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_style(style: str) -> Dict[str, str]:
+    """Parse an inline SVG style attribute into lowercase property names."""
+    declarations: Dict[str, str] = {}
+    for declaration in style.split(";"):
+        if ":" not in declaration:
+            continue
+        name, value = declaration.split(":", 1)
+        declarations[name.strip().lower()] = value.strip()
+    return declarations
+
+
+def _local_style_property(elem: etree._Element, name: str) -> Optional[str]:
+    """Read a style property from inline CSS or a presentation attribute."""
+    name = name.lower()
+    value = _parse_style(elem.get("style") or "").get(name)
+    if value is not None:
+        return value
+    return elem.get(name)
+
+
+def _inherited_style_property(elem: etree._Element, name: str) -> Optional[str]:
+    """Resolve a simple inherited SVG style property from element ancestors."""
+    for current in [elem, *elem.iterancestors()]:
+        value = _local_style_property(current, name)
+        if value is not None:
+            return value
+    return None
+
+
+def _parse_opacity(value: Optional[str]) -> Optional[float]:
+    """Parse an SVG opacity value, returning None when it is not numeric."""
+    if value is None:
+        return None
+
+    value = value.strip()
+    try:
+        if value.endswith("%"):
+            return float(value[:-1]) / 100.0
+        return float(value)
+    except ValueError:
+        return None
+
+
+def _is_transparent_paint(value: str) -> bool:
+    """Return True when an SVG paint value represents no visible paint."""
+    normalized = value.strip().lower().replace(" ", "")
+    if normalized in {"none", "transparent"}:
+        return True
+    if normalized.startswith("#") and len(normalized) in {5, 9}:
+        return normalized[-2:] == "00"
+    if normalized.startswith(
+        ("rgb(", "rgba(", "hsl(", "hsla(")
+    ) and normalized.endswith(")"):
+        body = normalized.split("(", 1)[1][:-1]
+        if "/" in body:
+            alpha = body.rsplit("/", 1)[-1]
+        elif normalized.startswith(("rgba(", "hsla(")):
+            alpha = body.rsplit(",", 1)[-1]
+        else:
+            return False
+        return _parse_opacity(alpha) == 0
+    return False
+
+
+def _has_visible_fill(elem: etree._Element) -> bool:
+    """Check whether an element has a fill color visible enough to hatch."""
+    fill = _inherited_style_property(elem, "fill")
+    if fill is not None and _is_transparent_paint(fill):
+        return False
+
+    fill_opacity = _parse_opacity(_inherited_style_property(elem, "fill-opacity"))
+    if fill_opacity == 0:
+        return False
+
+    for current in [elem, *elem.iterancestors()]:
+        opacity = _parse_opacity(_local_style_property(current, "opacity"))
+        if opacity == 0:
+            return False
+
+    return True
+
+
+def _fill_rule(elem: etree._Element) -> str:
+    """Resolve the SVG fill rule used to hatch a filled element."""
+    value = _inherited_style_property(elem, "fill-rule")
+    if value is None:
+        return "nonzero"
+
+    normalized = value.strip().lower().replace("-", "")
+    return "evenodd" if normalized == "evenodd" else "nonzero"
 
 
 def _open_file(filename: str) -> None:
@@ -199,8 +291,8 @@ class ExportGCode(inkex.OutputExtension):
             viewbox_height: SVG viewbox height.
             total_metrics: Accumulated metrics.
         """
-        segments = self._extract_segments(elem, viewbox_height)
-        if not segments:
+        segment_groups = self._extract_fill_segment_groups(elem, viewbox_height)
+        if not segment_groups:
             return
 
         angle = float(job.params.get("angle", 45.0))
@@ -208,12 +300,23 @@ class ExportGCode(inkex.OutputExtension):
         alternate = bool(job.params.get("alternate", True))
 
         hatch_segments: List[PathSegment] = []
-        for seg in segments:
-            if seg.path_type is PathType.CLOSED and len(seg.points) >= 3:
-                hatches = generate_hatch_lines(
-                    seg.points, angle=angle, spacing=spacing, alternate=alternate
-                )
-                hatch_segments.extend(hatches)
+        for shape, segments in segment_groups:
+            closed_polygons = [
+                seg.points
+                for seg in segments
+                if seg.path_type is PathType.CLOSED and len(seg.points) >= 3
+            ]
+            if not closed_polygons:
+                continue
+
+            hatches = generate_hatch_lines_for_polygons(
+                closed_polygons,
+                angle=angle,
+                spacing=spacing,
+                alternate=alternate,
+                fill_rule=_fill_rule(shape),
+            )
+            hatch_segments.extend(hatches)
 
         if not hatch_segments:
             debug_output(
@@ -304,6 +407,19 @@ class ExportGCode(inkex.OutputExtension):
             extracted = self._extractor.extract_from_element(shape, viewbox_height)
             segments.extend(extracted)
         return segments
+
+    def _extract_fill_segment_groups(
+        self, elem: etree._Element, viewbox_height: float
+    ) -> List[Tuple[etree._Element, List[PathSegment]]]:
+        """Extract path segments grouped by filled SVG element."""
+        segment_groups: List[Tuple[etree._Element, List[PathSegment]]] = []
+        for shape in get_visible_shapes(elem):
+            if not _has_visible_fill(shape):
+                continue
+            extracted = self._extractor.extract_from_element(shape, viewbox_height)
+            if extracted:
+                segment_groups.append((shape, extracted))
+        return segment_groups
 
     def _optimize_segments(
         self,

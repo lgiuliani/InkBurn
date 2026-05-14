@@ -7,7 +7,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import pytest
 from inkex.transforms import Vector2d
 
-from geometry.hatching import generate_hatch_lines
+from geometry.hatching import (
+    generate_hatch_lines,
+    generate_hatch_lines_for_polygons,
+)
 from models.path import PathSegment, PathType, distance, OptimizationMetrics
 
 
@@ -132,3 +135,56 @@ class TestHatching:
     def test_zero_spacing(self) -> None:
         """Zero spacing produces no hatch lines."""
         assert generate_hatch_lines(self._square(), spacing=0) == []
+
+    def test_compound_hatching_leaves_nonzero_hole(self) -> None:
+        """Opposite-wound inner contours remove hatch spans."""
+        outer = [
+            Vector2d(0, 0),
+            Vector2d(10, 0),
+            Vector2d(10, 10),
+            Vector2d(0, 10),
+        ]
+        inner = [
+            Vector2d(3, 3),
+            Vector2d(3, 7),
+            Vector2d(7, 7),
+            Vector2d(7, 3),
+        ]
+
+        lines = generate_hatch_lines_for_polygons(
+            [outer, inner],
+            angle=0,
+            spacing=1.0,
+            alternate=False,
+            fill_rule="nonzero",
+        )
+
+        hole_rows = [seg for seg in lines if 3 < seg.points[0].y < 7]
+        assert hole_rows
+        for seg in hole_rows:
+            x_min = min(point.x for point in seg.points)
+            x_max = max(point.x for point in seg.points)
+            assert x_max <= 3 or x_min >= 7
+
+    def test_compound_hatching_leaves_evenodd_hole(self) -> None:
+        """Even-odd fill leaves holes regardless of contour winding."""
+        outer = self._square()
+        inner = [
+            Vector2d(3, 3),
+            Vector2d(7, 3),
+            Vector2d(7, 7),
+            Vector2d(3, 7),
+        ]
+
+        lines = generate_hatch_lines_for_polygons(
+            [outer, inner],
+            angle=0,
+            spacing=1.0,
+            alternate=False,
+            fill_rule="evenodd",
+        )
+
+        for seg in [seg for seg in lines if 3 < seg.points[0].y < 7]:
+            x_min = min(point.x for point in seg.points)
+            x_max = max(point.x for point in seg.points)
+            assert x_max <= 3 or x_min >= 7
