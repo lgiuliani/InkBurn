@@ -62,8 +62,7 @@ def load_layers(
         )
         layers.append(layer)
         elements[layer_id] = elem
-        logger.debug("Loaded layer '%s': %s", label, layer.get_summary())
-
+        
     return layers, elements
 
 

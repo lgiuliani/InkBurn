@@ -116,6 +116,8 @@ class ExportGCode(inkex.OutputExtension):
         active_jobs = layer.active_jobs()
         if not active_jobs:
             return
+        
+        self._extractor.clear_cache()
 
         for idx, job in enumerate(active_jobs):
             if job.type == JobType.CUT:
