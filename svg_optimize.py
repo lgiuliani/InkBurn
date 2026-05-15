@@ -9,7 +9,7 @@ import inkex
 from inkex.transforms import Vector2d
 from lxml import etree
 
-from svg_layers import get_visible_shapes, is_visible, list_layers
+from svg_layers import iter_visible_shapes, is_visible, list_layers
 from debug_utils import debug_output
 from geometry.extractor import PathExtractor
 from geometry.optimizer import PathOptimizer
@@ -34,7 +34,7 @@ class SvgOptimize(inkex.EffectExtension):
             if not is_visible(layer_elem):
                 continue
 
-            elements = get_visible_shapes(layer_elem)
+            elements = list(iter_visible_shapes(layer_elem))
             if len(elements) < 2:
                 continue
 

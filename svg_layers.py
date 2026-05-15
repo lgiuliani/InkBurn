@@ -58,31 +58,42 @@ def is_visible(elem: etree._Element) -> bool:
         for e in chain([elem], elem.iterancestors())
     )
 
+def is_shape_element(elem: etree._Element) -> bool:
+    """Check if an element is a shape that can be exported.
 
-def get_visible_shapes(layer: etree._Element) -> List[etree._Element]:
-    """Collect all visible shape elements in a layer.
-
-    Skips groups, images, and elements without a ``path`` attribute.
+    Excludes groups, images, and elements without a ``path`` attribute.
 
     Args:
-        layer: Layer ``<g>`` element.
+        elem: SVG element.
 
     Returns:
-        Ordered list of shape elements.
+        True if the element is a shape.
     """
-    elements: List[etree._Element] = []
-    for elem in layer.xpath(".//svg:*", namespaces=NS):
-        if not is_visible(elem):
-            continue
-        if elem.tag_name == "g":
-            continue
-        if elem.tag_name == "image":
-            continue
-        if not hasattr(elem, "path"):
-            continue
-        elements.append(elem)
-    return elements
+    return (
+        elem.tag_name != "g"
+        and elem.tag_name != "image"
+        and hasattr(elem, "path")
+    )
 
+
+from collections.abc import Iterator
+
+def iter_visible_shapes(layer: etree._Element) -> Iterator[etree._Element]:
+    """
+    Yield visible shapes belonging strictly to this layer.
+
+    Nested layers are excluded to prevent geometry
+    ownership leakage across layers.
+    """
+
+    stack = list(layer)
+    while stack:
+        elem = stack.pop(0)
+
+        if is_visible(elem) and is_shape_element(elem):
+            yield elem
+
+        stack.extend(list(elem))
 
 def get_image_elements(layer: etree._Element) -> List[etree._Element]:
     """Collect all visible ``<image>`` elements in a layer.

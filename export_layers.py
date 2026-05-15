@@ -14,7 +14,7 @@ from typing import List, Tuple
 import inkex
 from lxml import etree
 
-from svg_layers import get_image_elements, get_visible_shapes, is_visible
+from svg_layers import get_image_elements, iter_visible_shapes, is_visible
 from debug_utils import debug_output
 from gcode.generator import GCodeGenerator
 from geometry.extractor import PathExtractor
@@ -294,7 +294,7 @@ class ExportGCode(inkex.OutputExtension):
     ) -> List[PathSegment]:
         """Extract path segments from all shapes in a layer element."""
         segments: List[PathSegment] = []
-        for shape in get_visible_shapes(elem):
+        for shape in iter_visible_shapes(elem):
             extracted = self._extractor.extract_from_element(shape, viewbox_height)
             segments.extend(extracted)
         return segments
@@ -304,7 +304,7 @@ class ExportGCode(inkex.OutputExtension):
     ) -> List[Tuple[etree._Element, List[PathSegment]]]:
         """Extract path segments grouped by filled SVG element."""
         segment_groups: List[Tuple[etree._Element, List[PathSegment]]] = []
-        for shape in get_visible_shapes(elem):
+        for shape in iter_visible_shapes(elem):
             if not has_visible_fill(shape):
                 continue
             extracted = self._extractor.extract_from_element(shape, viewbox_height)

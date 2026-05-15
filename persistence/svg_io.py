@@ -11,7 +11,7 @@ from typing import Dict, List, Tuple
 from lxml import etree
 
 from constants import inkscape_qname
-from svg_layers import get_layer_name, is_visible
+from svg_layers import get_layer_name, list_layers, is_visible
 from models.layer import Layer
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,8 @@ def load_layers(
 ) -> Tuple[List[Layer], Dict[str, etree._Element]]:
     """Load all layers and their jobs from an SVG root element.
 
-    Layers are returned in SVG document order.
+    Layers are returned in reversed SVG document order to match
+    visual order in Inkscape.
 
     Args:
         svg_root: Root ``<svg>`` element.
@@ -47,15 +48,18 @@ def load_layers(
     layers: List[Layer] = []
     elements: Dict[str, etree._Element] = {}
 
-    for elem in svg_root.iter():
-        if not _is_layer(elem):
-            continue
+    for elem in list_layers(svg_root):
         layer_id = elem.get("id", "")
         label = get_layer_name(elem)
         visible = is_visible(elem)
         attrs = dict(elem.attrib)
 
-        layer = Layer.from_svg_attributes(layer_id, label, visible, attrs)
+        layer = Layer.from_svg_attributes(
+            layer_id,
+            label,
+            visible,
+            attrs,
+        )
         layers.append(layer)
         elements[layer_id] = elem
         logger.debug("Loaded layer '%s': %s", label, layer.get_summary())
